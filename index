@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
     <style>
         :root {
             --bg-color: #1e1e1e;
@@ -174,7 +176,7 @@
             </table>
         </div>
         <div class="map-container">
-            <div id="status-msg">👆<br><br>Faça uma busca e clique num sinal da tabela para carregar o mapa.</div>
+            <div id="status-msg">⏳ Baixando base de dados (ZIP)... aguarde.</div>
             <div id="map"></div>
         </div>
     </div>
@@ -184,19 +186,22 @@
         let map = null;
         let currentMarker = null;
 
-        // Ao carregar a página, baixa o arquivo TXT que está na mesma pasta do GitHub
-        fetch('ILGADATA.TXT')
+        // Ao carregar a página, baixa o arquivo ZIP, extrai na memória e lê o TXT
+        fetch('ILGADATA.zip')
             .then(response => {
-                if(!response.ok) throw new Error("Arquivo TXT não encontrado no servidor.");
-                return response.text();
+                if(!response.ok) throw new Error("Ficheiro ZIP não encontrado.");
+                return response.blob();
             })
+            .then(blob => JSZip.loadAsync(blob))
+            .then(zip => zip.file("ILGADATA.TXT").async("string")) // Extrai o TXT de dentro do ZIP
             .then(text => {
                 ilgData = text.split('\n');
-                document.getElementById('status-msg').innerHTML = "✅ Base ILGADATA pronta para uso!";
+                document.getElementById('status-msg').innerHTML = "✅ Base ILGADATA carregada com sucesso!<br><br>Faça uma busca e clique num sinal da tabela para carregar o mapa.";
                 document.getElementById('status-msg').style.color = "#4CAF50";
             })
             .catch(err => {
-                document.getElementById('status-msg').innerHTML = "❌ Erro: O arquivo ILGADATA.TXT precisa estar na mesma pasta (repositório) do site.";
+                console.error(err);
+                document.getElementById('status-msg').innerHTML = "❌ Erro Crítico: O arquivo ILGADATA.zip não foi encontrado no servidor ou o nome do TXT dentro dele está diferente de 'ILGADATA.TXT'.";
                 document.getElementById('status-msg').style.color = "#F44336";
             });
 
@@ -211,6 +216,11 @@
         }
 
         function buscarSinais() {
+            if (ilgData.length === 0) {
+                alert("A base de dados ainda está sendo carregada, ou houve um erro. Aguarde um instante.");
+                return;
+            }
+
             const tbody = document.getElementById('resultBody');
             tbody.innerHTML = ''; // Limpa resultados
 
@@ -228,7 +238,7 @@
             const modFiltro = document.getElementById('modInput').value;
             const protFiltro = document.getElementById('protInput').value;
 
-            // Regex convertidos do Python para Javascript
+            // Regex
             const regexFreq = /^\s*(\d{1,5}\.\d{2})/;
             const regexMode = /(AM|USB[A-Z0-9]*|LSB[A-Z0-9]*|ISB|CW|FM|FSK|DRM|DATA(?::[A-Z]+(?:\s+[A-Z]+)*)?)/i;
             const regexProt = /((?:STANAG|PACTOR|ALE|MIL-STD|SITOR|NAVTEX|GMDSS|LINK|MFSK|FSK|PSK|RTTY|FAX|WEFAX|DGPS|MPSK|NT-\d+|AT-\d+|HFDL|SELCAL|BAUDOT|DSC|SYNOP|ARQ|FEC).*?)(?=\s{2,}|$)/i;
