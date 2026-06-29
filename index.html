@@ -7,11 +7,9 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        /* CSS Profissional - Dashboard Style */
         :root {
             --primary: #0ea5e9;
             --primary-hover: #0284c7;
@@ -29,6 +27,7 @@
             --input-bg: #0f172a;
             --row-hover: #38bdf822;
             --overlay: rgba(15, 23, 42, 0.8);
+            --tab-active: #38bdf833;
         }
 
         [data-theme="light"] {
@@ -40,13 +39,10 @@
             --input-bg: #f8fafc;
             --row-hover: #e0f2fe;
             --overlay: rgba(15, 23, 42, 0.5);
+            --tab-active: #e0f2fe;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
             font-family: var(--font-family);
@@ -59,18 +55,17 @@
             transition: background-color 0.2s, color 0.2s;
         }
 
-        /* Scrollbars Customizados */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-        /* Barra de Navegação Superior */
+        /* Navegação e Abas */
         .topbar {
             background-color: var(--surface);
             border-bottom: 1px solid var(--border);
             padding: 0 24px;
-            height: 48px;
+            height: 54px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -78,38 +73,38 @@
         }
 
         .brand {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             color: var(--text);
             display: flex;
             align-items: center;
             gap: 6px;
-            letter-spacing: 0.5px;
         }
+        .brand-highlight { color: var(--primary); }
 
-        .brand-highlight {
-            color: var(--primary);
-        }
-
-        .topbar-actions {
+        .tabs-container {
             display: flex;
-            gap: 8px;
+            gap: 4px;
+            height: 100%;
+            align-items: center;
         }
 
-        .btn-text {
+        .tab-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
-            padding: 6px 10px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 6px;
             transition: 0.2s;
         }
-        .btn-text:hover { color: var(--text); background-color: var(--border); }
+        .tab-btn:hover { color: var(--text); background-color: var(--border); }
+        .tab-btn.active { color: var(--primary); background-color: var(--tab-active); }
 
-        /* Container Principal */
+        .topbar-actions { display: flex; gap: 8px; }
+
         .app-layout {
             display: flex;
             flex-direction: column;
@@ -119,7 +114,7 @@
             overflow: hidden;
         }
 
-        /* Barra de Ferramentas (Filtros) */
+        /* Toolbars */
         .toolbar {
             background-color: var(--surface);
             border: 1px solid var(--border);
@@ -131,21 +126,12 @@
             align-items: flex-end;
             flex-shrink: 0;
         }
+        .hidden { display: none !important; }
 
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
         .input-group label {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
+            font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);
         }
-
         input, select {
             background-color: var(--input-bg);
             border: 1px solid var(--border);
@@ -153,231 +139,66 @@
             padding: 8px 12px;
             font-size: 13px;
             border-radius: 4px;
-            outline: none;
-            transition: border-color 0.2s;
-            font-family: inherit;
             height: 34px;
+            outline: none;
         }
-
         input:focus, select:focus { border-color: var(--primary); }
 
         .btn-primary {
-            background-color: var(--primary);
-            color: #fff;
-            border: none;
-            padding: 0 20px;
-            font-size: 13px;
-            font-weight: 600;
-            border-radius: 4px;
-            cursor: pointer;
-            height: 34px;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background-color: var(--primary); color: #fff; border: none;
+            padding: 0 20px; font-size: 13px; font-weight: 600; border-radius: 4px;
+            cursor: pointer; height: 34px; transition: 0.2s;
         }
         .btn-primary:hover { background-color: var(--primary-hover); }
 
-        /* Área de Dados (Tabela e Mapa) */
+        /* Workspace (Tabela e Mapa) */
         .data-workspace {
-            display: flex;
-            gap: 16px;
-            flex: 1;
-            overflow: hidden;
+            display: flex; gap: 16px; flex: 1; overflow: hidden;
         }
 
         .panel {
-            flex: 1;
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            flex: 1; background-color: var(--surface); border: 1px solid var(--border);
+            border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;
         }
 
-        /* Tabela */
-        .table-wrapper {
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            text-align: left;
-        }
-
+        .table-wrapper { flex: 1; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
         th {
-            background-color: var(--surface);
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 10px 16px;
-            position: sticky;
-            top: 0;
-            border-bottom: 1px solid var(--border);
-            z-index: 10;
+            background-color: var(--surface); color: var(--text-muted); font-weight: 600;
+            font-size: 11px; text-transform: uppercase; padding: 10px 16px;
+            position: sticky; top: 0; border-bottom: 1px solid var(--border); z-index: 10;
         }
-
-        td {
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text);
-            cursor: pointer;
-        }
-
+        td { padding: 10px 16px; border-bottom: 1px solid var(--border); color: var(--text); cursor: pointer; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: var(--row-hover); }
 
-        /* Mapa e Status */
-        .map-wrapper {
-            flex: 1;
-            position: relative;
-            background-color: var(--input-bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 250px;
-        }
-
+        .map-wrapper { flex: 1; position: relative; background-color: var(--input-bg); display: flex; align-items: center; justify-content: center; min-height: 250px;}
         #map { width: 100%; height: 100%; display: none; }
-        
-        .status-message {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 14px;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .status-icon { font-size: 24px; }
+        .status-message { text-align: center; color: var(--text-muted); font-size: 14px; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
 
         /* Modais */
         .modal-backdrop {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--overlay);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(2px);
-            padding: 16px;
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--overlay); z-index: 9999; align-items: center; justify-content: center; padding: 16px;
         }
-
         .modal-dialog {
-            background-color: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            display: flex;
-            flex-direction: column;
+            background-color: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+            width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: flex; flex-direction: column;
         }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+        .btn-close { background: none; border: none; color: var(--text-muted); font-size: 18px; cursor: pointer; }
+        .modal-body { padding: 20px; font-size: 13px; color: var(--text); line-height: 1.6; }
 
-        .modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .btn-close {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0 4px;
-        }
-        .btn-close:hover { color: var(--danger); }
-
-        .modal-body {
-            padding: 20px;
-            font-size: 13px;
-            color: var(--text);
-            line-height: 1.6;
-        }
-
-        .modal-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .modal-row:last-child { margin-bottom: 0; }
-
-        .modal-body ul { padding-left: 18px; margin-top: 10px; }
-        .modal-body li { margin-bottom: 6px; }
-
-        /* ==========================================
-           REGRAS DE ADAPTAÇÃO PARA DISPOSITIVOS MÓVEIS
-           ========================================== */
         @media (max-width: 768px) {
-            body {
-                height: auto;
-                overflow-y: auto;
-            }
-
-            .topbar {
-                padding: 0 16px;
-            }
-
-            .app-layout {
-                padding: 12px;
-                height: auto;
-                overflow: visible;
-                gap: 12px;
-            }
-
-            .toolbar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-                padding: 16px;
-            }
-
-            .input-group {
-                width: 100%;
-            }
-
-            input, select, .btn-primary {
-                width: 100%;
-                height: 40px; /* Área de toque expandida para mobile */
-                font-size: 14px;
-            }
-
-            .data-workspace {
-                flex-direction: column;
-                height: auto;
-                overflow: visible;
-                gap: 12px;
-            }
-
-            .panel {
-                flex: none;
-                height: 380px; /* Altura fixa confortável para rolar no celular */
-            }
-
-            th, td {
-                padding: 10px 12px; /* Margens internas ligeiramente mais compactas */
-                font-size: 12px;
-            }
+            body { height: auto; overflow-y: auto; }
+            .topbar { padding: 0 12px; flex-wrap: wrap; height: auto; gap: 10px; padding-bottom: 10px; padding-top: 10px;}
+            .tabs-container { width: 100%; justify-content: center; border-top: 1px solid var(--border); padding-top: 10px;}
+            .app-layout { padding: 12px; height: auto; overflow: visible; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .input-group, input, select, .btn-primary { width: 100%; }
+            .data-workspace { flex-direction: column; height: auto; overflow: visible; }
+            .panel { flex: none; height: 380px; }
         }
     </style>
 </head>
@@ -386,17 +207,23 @@
     <header class="topbar">
         <div class="brand">
             <span class="brand-highlight">PP2LA</span> 
-            <span data-i18n="app_title">Signal Intelligence System</span>
+            <span data-i18n="app_title">Signal Intelligence</span>
         </div>
+        
+        <div class="tabs-container">
+            <button id="tabIlg" class="tab-btn active" onclick="switchTab('ilg')">🔍 Buscador</button>
+            <button id="tabProg" class="tab-btn" onclick="switchTab('prog')">📅 Programadas</button>
+        </div>
+
         <div class="topbar-actions">
-            <button class="btn-text" onclick="openModal('helpModal')" data-i18n="btn_help">Ajuda</button>
-            <button class="btn-text" onclick="openModal('optionsModal')" data-i18n="btn_options">Configurações</button>
+            <button class="tab-btn" onclick="openModal('helpModal')" style="padding: 6px;">❓</button>
+            <button class="tab-btn" onclick="openModal('optionsModal')" style="padding: 6px;">⚙️</button>
         </div>
     </header>
 
     <main class="app-layout">
         
-        <div class="toolbar">
+        <div id="toolbar-ilg" class="toolbar">
             <div class="input-group">
                 <label data-i18n="lbl_freq">Freq (kHz)</label>
                 <input type="text" id="freqInput" placeholder="Ex: 10150">
@@ -404,54 +231,54 @@
             <div class="input-group">
                 <label data-i18n="lbl_range">Tolerância</label>
                 <select id="rangeInput">
-                    <option value="0" data-i18n="opt_exact">Exata</option>
+                    <option value="0">Exata</option>
                     <option value="1">+/- 1 kHz</option>
                     <option value="2" selected>+/- 2 kHz</option>
                     <option value="5">+/- 5 kHz</option>
-                    <option value="10">+/- 10 kHz</option>
-                    <option value="any" data-i18n="opt_any">Qualquer</option>
+                    <option value="any">Qualquer</option>
                 </select>
             </div>
             <div class="input-group">
                 <label data-i18n="lbl_mod">Modulação</label>
                 <select id="modInput">
-                    <option value="All" data-i18n="opt_all">Todas</option>
+                    <option value="All">Todas</option>
                     <option value="Voice">Voice</option>
                     <option value="Data">Data</option>
                     <option value="Morse">Morse</option>
                 </select>
             </div>
             <div class="input-group">
-                <label data-i18n="lbl_prot">Filtro de Protocolo</label>
+                <label data-i18n="lbl_prot">Protocolo</label>
                 <select id="protInput">
-                    <option value="All" data-i18n="opt_all_prot">Todos</option>
+                    <option value="All">Todos</option>
                     <option value="ALE">ALE</option>
                     <option value="STANAG">STANAG</option>
-                    <option value="PACTOR">PACTOR</option>
-                    <option value="MIL-STD">MIL-STD</option>
-                    <option value="FSK">FSK</option>
-                    <option value="PSK">PSK</option>
                     <option value="DSC">DSC</option>
                     <option value="NAVTEX">NAVTEX</option>
                 </select>
             </div>
-            <button class="btn-primary" onclick="buscarSinais()" data-i18n="btn_search">Buscar Sinais</button>
+            <button class="btn-primary" onclick="buscarSinaisILG()">Buscar Sinais</button>
+        </div>
+
+        <div id="toolbar-prog" class="toolbar hidden">
+            <div class="input-group" style="flex: 1;">
+                <label>Categoria de Serviço</label>
+                <select id="progCategory" onchange="renderSchedules()">
+                    <option value="maritima">⚓ Marítima</option>
+                    <option value="volmet">✈️ Aeronáutica (VOLMET)</option>
+                    <option value="hfdl">📡 Aeronáutica (HFDL)</option>
+                    <option value="meteo">🌩️ Meteorológica (RTTY / Radiofax)</option>
+                    <option value="tempo">⏱️ Sinal de Tempo</option>
+                </select>
+            </div>
         </div>
 
         <div class="data-workspace">
-            
             <div class="panel">
                 <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th data-i18n="th_freq">Freq</th>
-                                <th data-i18n="th_station">Entidade / Estação</th>
-                                <th data-i18n="th_mod">Mod.</th>
-                                <th data-i18n="th_prot">Protocolo</th>
-                                <th data-i18n="th_loc">Localidade</th>
-                            </tr>
-                        </thead>
+                    <table id="mainTable">
+                        <thead id="tableHead">
+                            </thead>
                         <tbody id="resultBody">
                             </tbody>
                     </table>
@@ -462,177 +289,168 @@
                 <div class="map-wrapper">
                     <div id="status-msg" class="status-message">
                         <span class="status-icon">⏳</span>
-                        <span data-i18n="msg_loading">Inicializando motor de base de dados...</span>
+                        <span>Inicializando motor de base de dados...</span>
                     </div>
                     <div id="map"></div>
                 </div>
             </div>
-
         </div>
     </main>
 
     <div id="optionsModal" class="modal-backdrop" onclick="closeModalOutside(event, 'optionsModal')">
         <div class="modal-dialog">
             <div class="modal-header">
-                <div class="modal-title" data-i18n="modal_opt_title">Configurações do System</div>
+                <div class="modal-title">Configurações</div>
                 <button class="btn-close" onclick="closeModal('optionsModal')">✕</button>
             </div>
             <div class="modal-body">
-                <div class="modal-row">
-                    <strong data-i18n="lbl_theme">Aparência:</strong>
-                    <select id="themeSelect" onchange="changeTheme(this.value)">
-                        <option value="dark" data-i18n="opt_dark">Dark Mode (Padrão)</option>
-                        <option value="light" data-i18n="opt_light">Light Mode</option>
-                    </select>
-                </div>
-                <div class="modal-row">
-                    <strong data-i18n="lbl_lang">Idioma da Interface:</strong>
-                    <select id="langSelect" onchange="changeLanguage(this.value)">
-                        <option value="pt">Português</option>
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                    </select>
-                </div>
+                <label>Tema:</label>
+                <select onchange="document.documentElement.setAttribute('data-theme', this.value); if(map) setTimeout(() => map.invalidateSize(), 50);">
+                    <option value="dark">Dark Mode</option>
+                    <option value="light">Light Mode</option>
+                </select>
             </div>
-        </div>
-    </div>
-
-    <div id="helpModal" class="modal-backdrop" onclick="closeModalOutside(event, 'helpModal')">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <div class="modal-title" data-i18n="modal_help_title">Manual Rápido de Operação</div>
-                <button class="btn-close" onclick="closeModal('helpModal')">✕</button>
-            </div>
-            <div class="modal-body" id="helpContent">
-                </div>
         </div>
     </div>
 
     <script>
+        // --- ESTADO GLOBAL ---
+        let currentTab = 'ilg'; // 'ilg' ou 'prog'
         let ilgData = [];
+        let progData = { maritima: [], volmet: [], hfdl: [], meteo: [], tempo: [] };
+        
         let map = null;
         let currentMarker = null;
 
-        // Dicionário do Sistema (i18n)
-        const translations = {
-            'pt': {
-                'app_title': 'Signal Intelligence System', 'btn_options': 'Configurações', 'btn_help': 'Ajuda',
-                'lbl_freq': 'Freq (kHz)', 'lbl_range': 'Tolerância', 'lbl_mod': 'Modulação', 'lbl_prot': 'Filtro de Protocolo',
-                'opt_exact': 'Exata', 'opt_any': 'Qualquer', 'opt_all': 'Todas', 'opt_all_prot': 'Todos',
-                'btn_search': 'Buscar Sinais', 'th_freq': 'Freq', 'th_station': 'Entidade / Estação', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Localidade',
-                'msg_loading': 'Inicializando motor de base de dados...',
-                'msg_ready': 'Sistema Pronto. <br> Execute uma varredura para visualizar no mapa.',
-                'msg_error': 'Falha na leitura do banco de dados (ILGADATA.zip não localizado).',
-                'msg_no_coord': 'Coordenadas indisponíveis no banco de dados para:',
-                'modal_opt_title': 'Configurações do Sistema', 'lbl_theme': 'Aparência:', 'opt_dark': 'Dark Mode (Padrão)', 'opt_light': 'Light Mode',
-                'lbl_lang': 'Idioma da Interface:', 'modal_help_title': 'Manual Rápido de Operação',
-                'help_text': `<p>Instruções para extração de dados utilitários HF:</p>
-                              <ul>
-                                <li><b>Varredura Direcionada:</b> Insira a frequência central (kHz). Ajuste a "Tolerância" para compensar desvios ou buscar redes adjacentes.</li>
-                                <li><b>Filtro de Emissão:</b> Isole os resultados selecionando sinais de Voz, Dados (Digitais) ou Código Morse (CW).</li>
-                                <li><b>Geolocalização:</b> Clique sobre qualquer interceptação na tabela para plotar a origem transmissora no mapa via satélite (quando disponível).</li>
-                              </ul>`
-            },
-            'en': {
-                'app_title': 'Signal Intelligence System', 'btn_options': 'Settings', 'btn_help': 'Help',
-                'lbl_freq': 'Freq (kHz)', 'lbl_range': 'Tolerance', 'lbl_mod': 'Modulation', 'lbl_prot': 'Protocol Filter',
-                'opt_exact': 'Exact', 'opt_any': 'Any', 'opt_all': 'All', 'opt_all_prot': 'All',
-                'btn_search': 'Scan Signals', 'th_freq': 'Freq', 'th_station': 'Entity / Station', 'th_mod': 'Mod.', 'th_prot': 'Protocol', 'th_loc': 'Location',
-                'msg_loading': 'Initializing database engine...',
-                'msg_ready': 'System Ready. <br> Run a scan to visualize on the map.',
-                'msg_error': 'Database read failure (ILGADATA.zip not found).',
-                'msg_no_coord': 'Coordinates unavailable in the database for:',
-                'modal_opt_title': 'System Settings', 'lbl_theme': 'Appearance:', 'opt_dark': 'Dark Mode (Default)', 'opt_light': 'Light Mode',
-                'lbl_lang': 'Interface Language:', 'modal_help_title': 'Quick Operation Manual',
-                'help_text': `<p>Instructions for HF utility data extraction:</p>
-                              <ul>
-                                <li><b>Targeted Scan:</b> Enter the center frequency (kHz). Adjust "Tolerance" to compensate for drift or search adjacent nets.</li>
-                                <li><b>Emission Filter:</b> Isolate results by selecting Voice, Data (Digital), or Morse Code (CW) signals.</li>
-                                <li><b>Geolocation:</b> Click any interception in the table to plot the transmitting origin on the satellite map (when available).</li>
-                              </ul>`
-            },
-            'es': {
-                'app_title': 'Signal Intelligence System', 'btn_options': 'Configuración', 'btn_help': 'Ayuda',
-                'lbl_freq': 'Frec (kHz)', 'lbl_range': 'Tolerancia', 'lbl_mod': 'Modulación', 'lbl_prot': 'Filtro Protocolo',
-                'opt_exact': 'Exacta', 'opt_any': 'Cualquiera', 'opt_all': 'Todas', 'opt_all_prot': 'Todos',
-                'btn_search': 'Buscar Señales', 'th_freq': 'Frec', 'th_station': 'Entidad / Estación', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Ubicación',
-                'msg_loading': 'Inicializando motor de base de dados...',
-                'msg_ready': 'Sistema Listo. <br> Ejecute una búsqueda para visualizar en el mapa.',
-                'msg_error': 'Fallo en lectura de base de datos (ILGADATA.zip no encontrado).',
-                'msg_no_coord': 'Coordenadas no disponibles en la base de datos para:',
-                'modal_opt_title': 'Configuración del Sistema', 'lbl_theme': 'Apariencia:', 'opt_dark': 'Modo Oscuro (Predeterminado)', 'opt_light': 'Modo Claro',
-                'lbl_lang': 'Idioma de Interfaz:', 'modal_help_title': 'Manual Rápido de Operación',
-                'help_text': `<p>Instrucciones para extracción de datos utilitarios HF:</p>
-                              <ul>
-                                <li><b>Búsqueda Dirigida:</b> Ingrese la frecuencia central (kHz). Ajuste la "Tolerancia" para compensar desvíos o buscar redes adyacentes.</li>
-                                <li><b>Filtro de Emisión:</b> Aísle los resultados seleccionando señales de Voz, Datos (Digitales) o Código Morse (CW).</li>
-                                <li><b>Geolocalización:</b> Haga clic en cualquier interceptación de la tabla para trazar el origen en el mapa satelital (cuando esté disponible).</li>
-                              </ul>`
-            }
-        };
-
-        let currentLang = 'pt';
-
-        function changeLanguage(lang) {
-            currentLang = lang;
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (translations[lang][key]) {
-                    if (el.tagName === 'INPUT') el.placeholder = translations[lang][key];
-                    else el.innerHTML = translations[lang][key];
-                }
-            });
-            document.getElementById('helpContent').innerHTML = translations[lang]['help_text'];
+        // --- SISTEMA DE ABAS ---
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tabIlg').classList.toggle('active', tab === 'ilg');
+            document.getElementById('tabProg').classList.toggle('active', tab === 'prog');
             
-            const statusDiv = document.getElementById('status-msg');
-            const statusIcon = '<span class="status-icon">✅</span><br>';
-            if (statusDiv.style.display !== 'none' && ilgData.length > 0) {
-                statusDiv.innerHTML = statusIcon + translations[lang]['msg_ready'];
+            document.getElementById('toolbar-ilg').classList.toggle('hidden', tab !== 'ilg');
+            document.getElementById('toolbar-prog').classList.toggle('hidden', tab !== 'prog');
+            
+            document.getElementById('resultBody').innerHTML = '';
+            
+            if (tab === 'prog') {
+                renderSchedules();
+            } else {
+                setILGHeaders();
             }
         }
 
-        function changeTheme(theme) {
-            document.documentElement.setAttribute('data-theme', theme);
-            if(map) { setTimeout(() => map.invalidateSize(), 100); }
-        }
-
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function closeModalOutside(event, id) { if (event.target.id === id) closeModal(id); }
-
-        changeLanguage('pt');
-
-        // Carregamento do BD (JSZip)
+        // --- INICIALIZAÇÃO DE DADOS ---
+        // 1. Carrega ILG (ZIP)
         fetch('ILGADATA.zip')
-            .then(response => {
-                if(!response.ok) throw new Error("ZIP falhou");
-                return response.blob();
-            })
+            .then(res => res.blob())
             .then(blob => JSZip.loadAsync(blob))
             .then(zip => zip.file("ILGADATA.TXT").async("string"))
-            .then(text => {
-                ilgData = text.split('\n');
-                const statusDiv = document.getElementById('status-msg');
-                statusDiv.innerHTML = '<span class="status-icon">✅</span><br>' + translations[currentLang]['msg_ready'];
-            })
-            .catch(err => {
-                const statusDiv = document.getElementById('status-msg');
-                statusDiv.innerHTML = '<span class="status-icon">❌</span><br>' + translations[currentLang]['msg_error'];
-                statusDiv.style.color = "var(--danger)";
-            });
+            .then(text => { ilgData = text.split('\n'); checkDatabasesReady(); })
+            .catch(err => console.error("Erro no ZIP", err));
 
-        function initMap() {
-            if (map) return;
-            map = L.map('map').setView([0, 0], 2);
-            L.tileLayer('https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
-                maxZoom: 22,
-                attribution: 'Google Maps'
-            }).addTo(map);
+        // 2. Carrega Programadas (TXT)
+        fetch('programadas.txt')
+            .then(res => res.text())
+            .then(text => parseProgramadas(text))
+            .catch(err => console.error("Erro no TXT", err));
+
+        function checkDatabasesReady() {
+            const statusDiv = document.getElementById('status-msg');
+            statusDiv.innerHTML = '<span class="status-icon">✅</span><br>Bases de Dados Carregadas.<br>Pronto para operar.';
+            setILGHeaders();
         }
 
-        function buscarSinais() {
-            if (ilgData.length === 0) return;
+        // --- PARSER DA BASE DE PROGRAMADAS ---
+        function parseProgramadas(text) {
+            const lines = text.split('\n');
+            let currentMode = 'maritima';
 
+            lines.forEach(line => {
+                let cleanLine = line.trim();
+                if(!cleanLine) return;
+
+                // Detecta mudança de categoria por palavras chave no arquivo
+                const upper = cleanLine.toUpperCase();
+                if(upper.includes('MARÍTIMA') || upper.includes('MARITIMA')) { currentMode = 'maritima'; return; }
+                if(upper.includes('VOLMET')) { currentMode = 'volmet'; return; }
+                if(upper.includes('HFDL')) { currentMode = 'hfdl'; return; }
+                if(upper.includes('METEOROLÓGICO') || upper.includes('RTTY') || upper.includes('RADIOFAX')) { currentMode = 'meteo'; return; }
+                if(upper.includes('SINAL DE TEMPO')) { currentMode = 'tempo'; return; }
+
+                // Pula headers de tabela de texto
+                if(upper.startsWith('FREQ') || upper.startsWith('---')) return;
+
+                // Divide colunas por Tabulação (\t) ou múltiplos espaços
+                let cols = cleanLine.split(/\t| {2,}/).map(s => s.trim()).filter(s => s !== "");
+                if(cols.length < 3) return;
+
+                // Extração Genérica de Coordenadas (busca nas últimas colunas)
+                let lat = null, lon = null;
+                const regexLatLon = /(-?\d{1,2}\s\d{2}\s\d{2})/;
+                let coordStr = cols.join(" ");
+                let coords = [...coordStr.matchAll(/-?\d{1,3}\s\d{2}\s\d{2}/g)];
+                
+                if(coords.length >= 2) {
+                    lat = convertToDecimal(coords[0][0]);
+                    lon = convertToDecimal(coords[1][0]);
+                }
+
+                // Salva na estrutura correspondente
+                if(currentMode === 'hfdl') {
+                    progData.hfdl.push({ 
+                        id: cols[0], call: cols[1], country: cols[2], station: cols[3], freqs: cols.slice(4).join(" | ")
+                    });
+                } else {
+                    progData[currentMode].push({
+                        freq: cols[0], times: cols[1], call: cols[2] || "-", country: cols[3] || "-", 
+                        station: cols[4] || "-", lang: cols[5] || "-", lat: lat, lon: lon, raw: cols.join(" | ")
+                    });
+                }
+            });
+        }
+
+        function convertToDecimal(dmsStr) {
+            let parts = dmsStr.split(' ');
+            if(parts.length !== 3) return null;
+            let deg = parseFloat(parts[0]);
+            let isNeg = deg < 0;
+            let dec = Math.abs(deg) + (parseFloat(parts[1])/60) + (parseFloat(parts[2])/3600);
+            return isNeg ? -dec : dec;
+        }
+
+        // --- RENDERIZAÇÃO DA TABELA PROGRAMADAS ---
+        function renderSchedules() {
+            const cat = document.getElementById('progCategory').value;
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('resultBody');
+            tbody.innerHTML = '';
+
+            if(cat === 'hfdl') {
+                thead.innerHTML = `<tr><th>ID</th><th>Indicativo</th><th>País</th><th>Estação</th><th>Frequências (kHz)</th></tr>`;
+                progData.hfdl.forEach(item => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${item.id}</td><td><b>${item.call}</b></td><td>${item.country}</td><td>${item.station}</td><td style="color:var(--primary);">${item.freqs}</td>`;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                thead.innerHTML = `<tr><th>Freq</th><th>Horários/Minutos</th><th>Indicativo</th><th>Estação</th><th>País</th></tr>`;
+                progData[cat].forEach(item => {
+                    let tr = document.createElement('tr');
+                    tr.innerHTML = `<td><b>${item.freq}</b></td><td style="color:var(--success);">${item.times}</td><td>${item.call}</td><td>${item.station}</td><td>${item.country}</td>`;
+                    tr.onclick = () => mostrarMapa(item.lat, item.lon, item.station, item.freq);
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // --- FUNÇÕES DO BUSCADOR ILG ORIGINAL ---
+        function setILGHeaders() {
+            document.getElementById('tableHead').innerHTML = `<tr><th>Freq</th><th>Entidade / Estação</th><th>Mod.</th><th>Protocolo</th><th>Localidade</th></tr>`;
+        }
+
+        function buscarSinaisILG() {
+            if (ilgData.length === 0) return;
             const tbody = document.getElementById('resultBody');
             tbody.innerHTML = ''; 
 
@@ -640,7 +458,6 @@
             const targetFreq = parseFloat(freqStr);
             const rangeVal = document.getElementById('rangeInput').value;
             const ignorarFreq = rangeVal === 'any';
-            
             if (!ignorarFreq && isNaN(targetFreq)) return;
             
             const margin = ignorarFreq ? 0 : parseFloat(rangeVal);
@@ -648,34 +465,36 @@
             const protFiltro = document.getElementById('protInput').value;
 
             const regexFreq = /^\s*(\d{1,5}\.\d{2})/;
-            const regexMode = /(AM|USB[A-Z0-9]*|LSB[A-Z0-9]*|ISB|CW|FM|FSK|DRM|DATA(?::[A-Z]+(?:\s+[A-Z]+)*)?)/i;
-            const regexProt = /((?:STANAG|PACTOR|ALE|MIL-STD|SITOR|NAVTEX|GMDSS|LINK|MFSK|FSK|PSK|RTTY|FAX|WEFAX|DGPS|MPSK|NT-\d+|AT-\d+|HFDL|SELCAL|BAUDOT|DSC|SYNOP|ARQ|FEC).*?)(?=\s{2,}|$)/i;
+            const regexMode = /(AM|USB|LSB|ISB|CW|FM|FSK|DRM|DATA(?::[A-Z]+(?:\s+[A-Z]+)*)?)/i;
+            const regexProt = /((?:STANAG|PACTOR|ALE|MIL-STD|SITOR|NAVTEX|GMDSS|DSC|SYNOP).*?)(?=\s{2,}|$)/i;
             const regexCoords = /(-?\d{1,2}\.\d{4,}),\s*(-?\d{1,3}\.\d{4,})/;
 
-            ilgData.forEach(line => {
+            let count = 0;
+            for(let i=0; i<ilgData.length; i++) {
+                if(count > 200) break; // Limite de renderização
+                let line = ilgData[i];
                 const fMatch = line.match(regexFreq);
-                if(!fMatch) return;
+                if(!fMatch) continue;
                 
                 const freq = parseFloat(fMatch[1]);
-                if(!ignorarFreq && Math.abs(freq - targetFreq) > margin) return;
+                if(!ignorarFreq && Math.abs(freq - targetFreq) > margin) continue;
 
                 const station = line.substring(8, 38).trim();
-                if(station.includes("STATION") || station.includes("######")) return;
+                if(station.includes("STATION") || station.includes("######")) continue;
 
                 const mMatch = line.match(regexMode);
                 const modeRaw = mMatch ? mMatch[1].trim().toUpperCase() : "";
 
                 if(modFiltro !== "All") {
                     const modeNorm = modeRaw.replace(/\s+/g, ' ');
-                    if(modFiltro === "Voice" && !(modeNorm.includes("DATA:VOICE") || /AM|USB|LSB|ISB|FM/.test(modeNorm))) return;
-                    if(modFiltro === "Morse" && !(modeNorm.includes("DATA:MORSE") || modeNorm.includes("CW"))) return;
-                    if(modFiltro === "Data" && !(/DATA:DATA|DATA:TELEX|DATA:PULSE|DATA:FAX|DATA:EMAIL|FSK|PSK|DRM/.test(modeNorm))) return;
+                    if(modFiltro === "Voice" && !(modeNorm.includes("DATA:VOICE") || /AM|USB|LSB|ISB|FM/.test(modeNorm))) continue;
+                    if(modFiltro === "Morse" && !(modeNorm.includes("DATA:MORSE") || modeNorm.includes("CW"))) continue;
+                    if(modFiltro === "Data" && !(/DATA:DATA|FSK|PSK|DRM/.test(modeNorm))) continue;
                 }
 
                 const pMatch = line.match(regexProt);
                 const protRaw = pMatch ? pMatch[1].trim() : "";
-
-                if(protFiltro !== "All" && !protRaw.toUpperCase().includes(protFiltro)) return;
+                if(protFiltro !== "All" && !protRaw.toUpperCase().includes(protFiltro)) continue;
 
                 const cMatch = line.match(regexCoords);
                 const lat = cMatch ? parseFloat(cMatch[1]) : null;
@@ -683,24 +502,27 @@
                 const location = line.substring(130, 156).trim();
 
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${freq.toFixed(2)}</td>
-                    <td>${station}</td>
-                    <td>${modeRaw}</td>
-                    <td>${protRaw}</td>
-                    <td>${location}</td>
-                `;
-
+                tr.innerHTML = `<td>${freq.toFixed(2)}</td><td>${station}</td><td>${modeRaw}</td><td>${protRaw}</td><td>${location}</td>`;
                 tr.onclick = () => mostrarMapa(lat, lon, station, freq);
                 tbody.appendChild(tr);
-            });
+                count++;
+            }
+        }
+
+        // --- SISTEMA DE MAPA ---
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([0, 0], 2);
+            L.tileLayer('https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+                maxZoom: 22, attribution: 'Google Maps'
+            }).addTo(map);
         }
 
         function mostrarMapa(lat, lon, station, freq) {
             const msgDiv = document.getElementById('status-msg');
             const mapDiv = document.getElementById('map');
 
-            if (lat !== null && lon !== null) {
+            if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
                 msgDiv.style.display = 'none';
                 mapDiv.style.display = 'block';
                 initMap();
@@ -708,14 +530,20 @@
                 if (currentMarker) map.removeLayer(currentMarker);
                 map.setView([lat, lon], 14); 
                 currentMarker = L.marker([lat, lon]).addTo(map)
-                    .bindPopup(`<b>${station}</b><br>${freq} kHz`)
+                    .bindPopup(`<b>${station}</b><br>${freq}`)
                     .openPopup();
             } else {
                 mapDiv.style.display = 'none';
                 msgDiv.style.display = 'flex';
-                msgDiv.innerHTML = `<span class="status-icon">📍</span><b>${translations[currentLang]['msg_no_coord']}</b><br><span style="color: var(--danger);">'${station}'</span>`;
+                msgDiv.innerHTML = `<span class="status-icon">📍</span><b>Coordenadas não disponíveis na base para:</b><br><span style="color: var(--danger);">'${station}'</span>`;
             }
         }
+
+        // --- Modais Auxiliares ---
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeModalOutside(event, id) { if (event.target.id === id) closeModal(id); }
+
     </script>
 </body>
 </html>
