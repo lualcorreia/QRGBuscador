@@ -13,7 +13,6 @@
     <style>
         /* CSS Profissional - Dashboard Style */
         :root {
-            /* Cores base para uma interface técnica (Azul-Aço) */
             --primary: #0ea5e9;
             --primary-hover: #0284c7;
             --danger: #ef4444;
@@ -22,11 +21,11 @@
         }
 
         [data-theme="dark"] {
-            --bg: #0f172a;        /* Fundo principal escuro */
-            --surface: #1e293b;   /* Painéis */
-            --border: #334155;    /* Linhas finas */
-            --text: #f8fafc;      /* Texto principal */
-            --text-muted: #94a3b8;/* Texto secundário */
+            --bg: #0f172a;        
+            --surface: #1e293b;   
+            --border: #334155;    
+            --text: #f8fafc;      
+            --text-muted: #94a3b8;
             --input-bg: #0f172a;
             --row-hover: #38bdf822;
             --overlay: rgba(15, 23, 42, 0.8);
@@ -60,13 +59,13 @@
             transition: background-color 0.2s, color 0.2s;
         }
 
-        /* Scrollbars Customizados (Aparência Profissional) */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        /* Scrollbars Customizados */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-        /* Barra de Navegação Superior (Slim) */
+        /* Barra de Navegação Superior */
         .topbar {
             background-color: var(--surface);
             border-bottom: 1px solid var(--border);
@@ -79,12 +78,12 @@
         }
 
         .brand {
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             color: var(--text);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             letter-spacing: 0.5px;
         }
 
@@ -94,7 +93,7 @@
 
         .topbar-actions {
             display: flex;
-            gap: 12px;
+            gap: 8px;
         }
 
         .btn-text {
@@ -104,7 +103,7 @@
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            padding: 4px 8px;
+            padding: 6px 10px;
             border-radius: 4px;
             transition: 0.2s;
         }
@@ -157,6 +156,7 @@
             outline: none;
             transition: border-color 0.2s;
             font-family: inherit;
+            height: 34px;
         }
 
         input:focus, select:focus { border-color: var(--primary); }
@@ -165,13 +165,16 @@
             background-color: var(--primary);
             color: #fff;
             border: none;
-            padding: 8px 20px;
+            padding: 0 20px;
             font-size: 13px;
             font-weight: 600;
             border-radius: 4px;
             cursor: pointer;
             height: 34px;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .btn-primary:hover { background-color: var(--primary-hover); }
 
@@ -193,7 +196,7 @@
             flex-direction: column;
         }
 
-        /* Tabela Profissional */
+        /* Tabela */
         .table-wrapper {
             flex: 1;
             overflow-y: auto;
@@ -221,7 +224,7 @@
         }
 
         td {
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-bottom: 1px solid var(--border);
             color: var(--text);
             cursor: pointer;
@@ -238,6 +241,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 250px;
         }
 
         #map { width: 100%; height: 100%; display: none; }
@@ -265,6 +269,7 @@
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(2px);
+            padding: 16px;
         }
 
         .modal-dialog {
@@ -320,6 +325,60 @@
         .modal-body ul { padding-left: 18px; margin-top: 10px; }
         .modal-body li { margin-bottom: 6px; }
 
+        /* ==========================================
+           REGRAS DE ADAPTAÇÃO PARA DISPOSITIVOS MÓVEIS
+           ========================================== */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                overflow-y: auto;
+            }
+
+            .topbar {
+                padding: 0 16px;
+            }
+
+            .app-layout {
+                padding: 12px;
+                height: auto;
+                overflow: visible;
+                gap: 12px;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+                padding: 16px;
+            }
+
+            .input-group {
+                width: 100%;
+            }
+
+            input, select, .btn-primary {
+                width: 100%;
+                height: 40px; /* Área de toque expandida para mobile */
+                font-size: 14px;
+            }
+
+            .data-workspace {
+                flex-direction: column;
+                height: auto;
+                overflow: visible;
+                gap: 12px;
+            }
+
+            .panel {
+                flex: none;
+                height: 380px; /* Altura fixa confortável para rolar no celular */
+            }
+
+            th, td {
+                padding: 10px 12px; /* Margens internas ligeiramente mais compactas */
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -340,11 +399,11 @@
         <div class="toolbar">
             <div class="input-group">
                 <label data-i18n="lbl_freq">Freq (kHz)</label>
-                <input type="text" id="freqInput" placeholder="Ex: 10150" style="width: 110px;">
+                <input type="text" id="freqInput" placeholder="Ex: 10150">
             </div>
             <div class="input-group">
                 <label data-i18n="lbl_range">Tolerância</label>
-                <select id="rangeInput" style="width: 140px;">
+                <select id="rangeInput">
                     <option value="0" data-i18n="opt_exact">Exata</option>
                     <option value="1">+/- 1 kHz</option>
                     <option value="2" selected>+/- 2 kHz</option>
@@ -355,7 +414,7 @@
             </div>
             <div class="input-group">
                 <label data-i18n="lbl_mod">Modulação</label>
-                <select id="modInput" style="width: 110px;">
+                <select id="modInput">
                     <option value="All" data-i18n="opt_all">Todas</option>
                     <option value="Voice">Voice</option>
                     <option value="Data">Data</option>
@@ -364,7 +423,7 @@
             </div>
             <div class="input-group">
                 <label data-i18n="lbl_prot">Filtro de Protocolo</label>
-                <select id="protInput" style="width: 130px;">
+                <select id="protInput">
                     <option value="All" data-i18n="opt_all_prot">Todos</option>
                     <option value="ALE">ALE</option>
                     <option value="STANAG">STANAG</option>
@@ -415,7 +474,7 @@
     <div id="optionsModal" class="modal-backdrop" onclick="closeModalOutside(event, 'optionsModal')">
         <div class="modal-dialog">
             <div class="modal-header">
-                <div class="modal-title" data-i18n="modal_opt_title">Configurações do Sistema</div>
+                <div class="modal-title" data-i18n="modal_opt_title">Configurações do System</div>
                 <button class="btn-close" onclick="closeModal('optionsModal')">✕</button>
             </div>
             <div class="modal-body">
@@ -497,7 +556,7 @@
                 'lbl_freq': 'Frec (kHz)', 'lbl_range': 'Tolerancia', 'lbl_mod': 'Modulación', 'lbl_prot': 'Filtro Protocolo',
                 'opt_exact': 'Exacta', 'opt_any': 'Cualquiera', 'opt_all': 'Todas', 'opt_all_prot': 'Todos',
                 'btn_search': 'Buscar Señales', 'th_freq': 'Frec', 'th_station': 'Entidad / Estación', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Ubicación',
-                'msg_loading': 'Inicializando motor de base de datos...',
+                'msg_loading': 'Inicializando motor de base de dados...',
                 'msg_ready': 'Sistema Listo. <br> Ejecute una búsqueda para visualizar en el mapa.',
                 'msg_error': 'Fallo en lectura de base de datos (ILGADATA.zip no encontrado).',
                 'msg_no_coord': 'Coordenadas no disponibles en la base de datos para:',
@@ -534,7 +593,7 @@
 
         function changeTheme(theme) {
             document.documentElement.setAttribute('data-theme', theme);
-            if(map) { setTimeout(() => map.invalidateSize(), 50); }
+            if(map) { setTimeout(() => map.invalidateSize(), 100); }
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
