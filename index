@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Escuta Utilitária (Web Edition)</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #2b2b2b;
+            --text-color: #ffffff;
+            --primary-color: #E65100;
+            --primary-hover: #F57C00;
+            --table-header: #333333;
+            --table-row-hover: #1f538d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* Barra Superior */
+        .header {
+            background-color: var(--panel-bg);
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label { font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #aaa; }
+        
+        input, select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #444;
+            color: white;
+            font-size: 14px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 15px;
+        }
+        button:hover { background-color: var(--primary-hover); }
+
+        /* Área Principal 50/50 */
+        .main-container {
+            display: flex;
+            gap: 15px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Tabela */
+        .table-container {
+            flex: 1;
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background-color: var(--table-header); padding: 12px; text-align: left; position: sticky; top: 0; z-index: 10;}
+        td { padding: 10px 12px; border-bottom: 1px solid #444; cursor: pointer; }
+        tr:hover { background-color: var(--table-row-hover); }
+
+        /* Mapa */
+        .map-container {
+            flex: 1;
+            background-color: var(--panel-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        #map { width: 100%; height: 100%; display: none; }
+        #status-msg { text-align: center; color: #888; font-size: 16px; padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="control-group">
+            <label>Frequência (kHz):</label>
+            <input type="text" id="freqInput" placeholder="Ex: 10150" style="width: 120px;">
+        </div>
+        <div class="control-group">
+            <label>Range (Tolerância):</label>
+            <select id="rangeInput">
+                <option value="0">Exato</option>
+                <option value="1">+/- 1 kHz</option>
+                <option value="2" selected>+/- 2 kHz</option>
+                <option value="5">+/- 5 kHz</option>
+                <option value="10">+/- 10 kHz</option>
+                <option value="any">Qualquer (Ignorar)</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Modulação:</label>
+            <select id="modInput">
+                <option value="All">Todas</option>
+                <option value="Voice">Voice</option>
+                <option value="Data">Data</option>
+                <option value="Morse">Morse</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label>Protocolo:</label>
+            <select id="protInput">
+                <option value="All">Todos</option>
+                <option value="ALE">ALE</option>
+                <option value="STANAG">STANAG</option>
+                <option value="PACTOR">PACTOR</option>
+                <option value="MIL-STD">MIL-STD</option>
+                <option value="FSK">FSK</option>
+                <option value="PSK">PSK</option>
+                <option value="DSC">DSC</option>
+                <option value="NAVTEX">NAVTEX</option>
+            </select>
+        </div>
+        <button onclick="buscarSinais()">🔍 BUSCAR SINAIS</button>
+    </div>
+
+    <div class="main-container">
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Freq</th>
+                        <th>Estação</th>
+                        <th>Mod.</th>
+                        <th>Protocolo</th>
+                        <th>Local</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                    </tbody>
+            </table>
+        </div>
+        <div class="map-container">
+            <div id="status-msg">👆<br><br>Faça uma busca e clique num sinal da tabela para carregar o mapa.</div>
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script>
+        let ilgData = [];
+        let map = null;
+        let currentMarker = null;
+
+        // Ao carregar a página, baixa o arquivo TXT que está na mesma pasta do GitHub
+        fetch('ILGADATA.TXT')
+            .then(response => {
+                if(!response.ok) throw new Error("Arquivo TXT não encontrado no servidor.");
+                return response.text();
+            })
+            .then(text => {
+                ilgData = text.split('\n');
+                document.getElementById('status-msg').innerHTML = "✅ Base ILGADATA pronta para uso!";
+                document.getElementById('status-msg').style.color = "#4CAF50";
+            })
+            .catch(err => {
+                document.getElementById('status-msg').innerHTML = "❌ Erro: O arquivo ILGADATA.TXT precisa estar na mesma pasta (repositório) do site.";
+                document.getElementById('status-msg').style.color = "#F44336";
+            });
+
+        // Inicializa o Mapa usando Google Satélite (idêntico ao Python)
+        function initMap() {
+            if (map) return;
+            map = L.map('map').setView([0, 0], 2);
+            L.tileLayer('https://mt0.google.com/vt/lyrs=y&hl=en&x={x}&y={y}&z={z}', {
+                maxZoom: 22,
+                attribution: 'Google Maps Satellite'
+            }).addTo(map);
+        }
+
+        function buscarSinais() {
+            const tbody = document.getElementById('resultBody');
+            tbody.innerHTML = ''; // Limpa resultados
+
+            const freqStr = document.getElementById('freqInput').value.replace(',', '.');
+            const targetFreq = parseFloat(freqStr);
+            const rangeVal = document.getElementById('rangeInput').value;
+            const ignorarFreq = rangeVal === 'any';
+            
+            if (!ignorarFreq && isNaN(targetFreq)) {
+                alert("Digite uma frequência válida.");
+                return;
+            }
+            
+            const margin = ignorarFreq ? 0 : parseFloat(rangeVal);
+            const modFiltro = document.getElementById('modInput').value;
+            const protFiltro = document.getElementById('protInput').value;
+
+            // Regex convertidos do Python para Javascript
+            const regexFreq = /^\s*(\d{1,5}\.\d{2})/;
+            const regexMode = /(AM|USB[A-Z0-9]*|LSB[A-Z0-9]*|ISB|CW|FM|FSK|DRM|DATA(?::[A-Z]+(?:\s+[A-Z]+)*)?)/i;
+            const regexProt = /((?:STANAG|PACTOR|ALE|MIL-STD|SITOR|NAVTEX|GMDSS|LINK|MFSK|FSK|PSK|RTTY|FAX|WEFAX|DGPS|MPSK|NT-\d+|AT-\d+|HFDL|SELCAL|BAUDOT|DSC|SYNOP|ARQ|FEC).*?)(?=\s{2,}|$)/i;
+            const regexCoords = /(-?\d{1,2}\.\d{4,}),\s*(-?\d{1,3}\.\d{4,})/;
+
+            ilgData.forEach(line => {
+                const fMatch = line.match(regexFreq);
+                if(!fMatch) return;
+                
+                const freq = parseFloat(fMatch[1]);
+                if(!ignorarFreq && Math.abs(freq - targetFreq) > margin) return;
+
+                const station = line.substring(8, 38).trim();
+                if(station.includes("STATION") || station.includes("######")) return;
+
+                const mMatch = line.match(regexMode);
+                const modeRaw = mMatch ? mMatch[1].trim().toUpperCase() : "";
+
+                // Filtro de Modulação (Voice, Data, Morse)
+                if(modFiltro !== "All") {
+                    const modeNorm = modeRaw.replace(/\s+/g, ' ');
+                    if(modFiltro === "Voice" && !(modeNorm.includes("DATA:VOICE") || /AM|USB|LSB|ISB|FM/.test(modeNorm))) return;
+                    if(modFiltro === "Morse" && !(modeNorm.includes("DATA:MORSE") || modeNorm.includes("CW"))) return;
+                    if(modFiltro === "Data" && !(/DATA:DATA|DATA:TELEX|DATA:PULSE|DATA:FAX|DATA:EMAIL|FSK|PSK|DRM/.test(modeNorm))) return;
+                }
+
+                const pMatch = line.match(regexProt);
+                const protRaw = pMatch ? pMatch[1].trim() : "";
+
+                if(protFiltro !== "All" && !protRaw.toUpperCase().includes(protFiltro)) return;
+
+                const cMatch = line.match(regexCoords);
+                const lat = cMatch ? parseFloat(cMatch[1]) : null;
+                const lon = cMatch ? parseFloat(cMatch[2]) : null;
+                const location = line.substring(130, 156).trim();
+
+                // Cria a linha na tabela HTML
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${freq.toFixed(2)}</td>
+                    <td>${station}</td>
+                    <td>${modeRaw}</td>
+                    <td>${protRaw}</td>
+                    <td>${location}</td>
+                `;
+
+                // Evento de clique para abrir o mapa
+                tr.onclick = () => mostrarMapa(lat, lon, station, freq);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function mostrarMapa(lat, lon, station, freq) {
+            const msgDiv = document.getElementById('status-msg');
+            const mapDiv = document.getElementById('map');
+
+            if (lat !== null && lon !== null) {
+                msgDiv.style.display = 'none';
+                mapDiv.style.display = 'block';
+                initMap();
+                
+                if (currentMarker) map.removeLayer(currentMarker);
+                
+                map.setView([lat, lon], 14); // Centraliza e dá Zoom
+                
+                // Cria o pin no mapa
+                currentMarker = L.marker([lat, lon]).addTo(map)
+                    .bindPopup(`<b>${station}</b><br>${freq} kHz`)
+                    .openPopup();
+            } else {
+                mapDiv.style.display = 'none';
+                msgDiv.style.display = 'block';
+                msgDiv.innerHTML = `📍 <b>Sem coordenadas</b><br><br>A base não forneceu GPS para:<br><span style="color: #F44336;">'${station}'</span>`;
+                msgDiv.style.color = "#888";
+            }
+        }
+    </script>
+</body>
+</html>
