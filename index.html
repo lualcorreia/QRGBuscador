@@ -238,8 +238,7 @@
                         <thead>
                             <tr>
                                 <th data-i18n="th_freq">Freq</th>
-                                <th data-i18n="th_call">Indicativo</th>
-                                <th data-i18n="th_station">Entidade / Estação</th>
+                                <th data-i18n="th_call">Modulação</th> <th data-i18n="th_station">Entidade / Estação</th>
                                 <th data-i18n="th_mod">Mod.</th>
                                 <th data-i18n="th_prot">Protocolo</th>
                                 <th data-i18n="th_loc">Localidade</th>
@@ -316,7 +315,7 @@
                 'app_title': 'Signal Intelligence System', 'btn_options': 'Configurações', 'btn_help': 'Ajuda',
                 'lbl_freq': 'Freq (kHz)', 'lbl_range': 'Tolerância', 'lbl_mod': 'Modulação', 'lbl_prot': 'Filtro de Protocolo',
                 'opt_exact': 'Exata', 'opt_any': 'Qualquer', 'opt_all': 'Todas', 'opt_all_prot': 'Todos',
-                'btn_search': 'Buscar Sinais', 'th_freq': 'Freq', 'th_call': 'Indicativo', 'th_station': 'Entidade / Estação', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Localidade',
+                'btn_search': 'Buscar Sinais', 'th_freq': 'Freq', 'th_call': 'Modulação', 'th_station': 'Entidade / Estação', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Localidade',
                 'msg_loading': 'Inicializando motor de base de dados...',
                 'msg_ready': 'Sistema Pronto. <br> Execute uma varredura para visualizar no mapa.',
                 'msg_error': 'Falha na leitura do banco de dados (ILGADATA.zip não localizado).',
@@ -334,7 +333,7 @@
                 'app_title': 'Signal Intelligence System', 'btn_options': 'Settings', 'btn_help': 'Help',
                 'lbl_freq': 'Freq (kHz)', 'lbl_range': 'Tolerance', 'lbl_mod': 'Modulation', 'lbl_prot': 'Protocol Filter',
                 'opt_exact': 'Exact', 'opt_any': 'Any', 'opt_all': 'All', 'opt_all_prot': 'All',
-                'btn_search': 'Scan Signals', 'th_freq': 'Freq', 'th_call': 'Callsign', 'th_station': 'Entity / Station', 'th_mod': 'Mod.', 'th_prot': 'Protocol', 'th_loc': 'Location',
+                'btn_search': 'Scan Signals', 'th_freq': 'Freq', 'th_call': 'Modulation', 'th_station': 'Entity / Station', 'th_mod': 'Mod.', 'th_prot': 'Protocol', 'th_loc': 'Location',
                 'msg_loading': 'Initializing database engine...',
                 'msg_ready': 'System Ready. <br> Run a scan to visualize on the map.',
                 'msg_error': 'Database read failure (ILGADATA.zip not found).',
@@ -352,7 +351,7 @@
                 'app_title': 'Signal Intelligence System', 'btn_options': 'Configuración', 'btn_help': 'Ayuda',
                 'lbl_freq': 'Frec (kHz)', 'lbl_range': 'Tolerancia', 'lbl_mod': 'Modulación', 'lbl_prot': 'Filtro Protocolo',
                 'opt_exact': 'Exacta', 'opt_any': 'Cualquiera', 'opt_all': 'Todas', 'opt_all_prot': 'Todos',
-                'btn_search': 'Buscar Señales', 'th_freq': 'Frec', 'th_call': 'Indicativo', 'th_station': 'Entidad / Estación', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Ubicación',
+                'btn_search': 'Buscar Señales', 'th_freq': 'Frec', 'th_call': 'Modulación', 'th_station': 'Entidad / Estación', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Ubicación',
                 'msg_loading': 'Inicializando motor de base de datos...',
                 'msg_ready': 'Sistema Listo. <br> Ejecute una búsqueda para visualizar en el mapa.',
                 'msg_error': 'Fallo en lectura de base de datos (ILGADATA.zip no encontrado).',
@@ -467,9 +466,8 @@
                 const station = line.substring(8, 38).trim();
                 if(station.includes("STATION") || station.includes("######")) return;
 
-                // CORREÇÃO: Extração exata do Indicativo a partir da posição 191
-                let callsign = "";
-                if(line.length > 191) callsign = line.substring(191, 206).trim();
+                let modulacaoExtra = "";
+                if(line.length > 191) modulacaoExtra = line.substring(191, 206).trim();
 
                 const mMatch = line.match(regexMode);
                 const modeRaw = mMatch ? mMatch[1].trim().toUpperCase() : "";
@@ -485,7 +483,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${freq.toFixed(2)}</td>
-                    <td style="font-weight:600;">${callsign}</td>
+                    <td style="font-weight:600;">${modulacaoExtra}</td>
                     <td>${station}</td>
                     <td>${modeRaw}</td>
                     <td>${protRaw}</td>
@@ -530,9 +528,8 @@
                 const station = line.substring(8, 38).trim();
                 if(station.includes("STATION") || station.includes("######")) return;
 
-                // CORREÇÃO: Extração exata do Indicativo a partir da posição 191
-                let callsign = "";
-                if(line.length > 191) callsign = line.substring(191, 206).trim();
+                let modulacaoExtra = "";
+                if(line.length > 191) modulacaoExtra = line.substring(191, 206).trim();
 
                 const mMatch = line.match(regexMode);
                 const modeRaw = mMatch ? mMatch[1].trim().toUpperCase() : "";
@@ -557,7 +554,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${freq.toFixed(2)}</td>
-                    <td style="font-weight:600;">${callsign}</td>
+                    <td style="font-weight:600;">${modulacaoExtra}</td>
                     <td>${station}</td>
                     <td>${modeRaw}</td>
                     <td>${protRaw}</td>
