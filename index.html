@@ -91,6 +91,37 @@
             color: var(--primary);
         }
 
+        /* Sistema de Abas Integrado */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-left: 20px;
+            flex: 1;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 4px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        
+        .tab-btn:hover {
+            color: var(--text);
+            background: var(--border);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+
         .topbar-actions {
             display: flex;
             gap: 8px;
@@ -335,7 +366,18 @@
             }
 
             .topbar {
-                padding: 0 16px;
+                padding: 10px 16px;
+                height: auto;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .nav-tabs {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding-bottom: 4px;
             }
 
             .app-layout {
@@ -358,7 +400,7 @@
 
             input, select, .btn-primary {
                 width: 100%;
-                height: 40px; /* Área de toque expandida para mobile */
+                height: 40px;
                 font-size: 14px;
             }
 
@@ -371,11 +413,11 @@
 
             .panel {
                 flex: none;
-                height: 380px; /* Altura fixa confortável para rolar no celular */
+                height: 380px; 
             }
 
             th, td {
-                padding: 10px 12px; /* Margens internas ligeiramente mais compactas */
+                padding: 10px 12px; 
                 font-size: 12px;
             }
         }
@@ -388,6 +430,13 @@
             <span class="brand-highlight">PP2LA</span> 
             <span data-i18n="app_title">Signal Intelligence System</span>
         </div>
+        
+        <!-- Sistema de Abas (Buscador / Tabela Completa) -->
+        <div class="nav-tabs">
+            <button id="tab-btn-ilg" class="tab-btn active" onclick="switchTab('ilg')">🔍 Buscador</button>
+            <button id="tab-btn-all" class="tab-btn" onclick="switchTab('all')">📋 Tabela Completa</button>
+        </div>
+
         <div class="topbar-actions">
             <button class="btn-text" onclick="openModal('helpModal')" data-i18n="btn_help">Ajuda</button>
             <button class="btn-text" onclick="openModal('optionsModal')" data-i18n="btn_options">Configurações</button>
@@ -396,7 +445,7 @@
 
     <main class="app-layout">
         
-        <div class="toolbar">
+        <div class="toolbar" id="toolbar-ilg">
             <div class="input-group">
                 <label data-i18n="lbl_freq">Freq (kHz)</label>
                 <input type="text" id="freqInput" placeholder="Ex: 10150">
@@ -446,14 +495,23 @@
                         <thead>
                             <tr>
                                 <th data-i18n="th_freq">Freq</th>
+                                <th data-i18n="th_call">Indicativo</th> <!-- NOVA COLUNA -->
                                 <th data-i18n="th_station">Entidade / Estação</th>
                                 <th data-i18n="th_mod">Mod.</th>
                                 <th data-i18n="th_prot">Protocolo</th>
                                 <th data-i18n="th_loc">Localidade</th>
                             </tr>
                         </thead>
+                        
+                        <!-- Aba 1: Resultados da Busca -->
                         <tbody id="resultBody">
-                            </tbody>
+                            <!-- Injetado via JS -->
+                        </tbody>
+
+                        <!-- Aba 2: Tabela Completa (Escondida por padrão) -->
+                        <tbody id="allBody" style="display:none;">
+                            <!-- Injetado via JS -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -504,7 +562,8 @@
                 <button class="btn-close" onclick="closeModal('helpModal')">✕</button>
             </div>
             <div class="modal-body" id="helpContent">
-                </div>
+                <!-- Preenchido via JS -->
+            </div>
         </div>
     </div>
 
@@ -512,14 +571,16 @@
         let ilgData = [];
         let map = null;
         let currentMarker = null;
+        
+        // Mantém a aba atual
+        let currentTab = 'ilg';
 
-        // Dicionário do Sistema (i18n)
         const translations = {
             'pt': {
                 'app_title': 'Signal Intelligence System', 'btn_options': 'Configurações', 'btn_help': 'Ajuda',
                 'lbl_freq': 'Freq (kHz)', 'lbl_range': 'Tolerância', 'lbl_mod': 'Modulação', 'lbl_prot': 'Filtro de Protocolo',
                 'opt_exact': 'Exata', 'opt_any': 'Qualquer', 'opt_all': 'Todas', 'opt_all_prot': 'Todos',
-                'btn_search': 'Buscar Sinais', 'th_freq': 'Freq', 'th_station': 'Entidade / Estação', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Localidade',
+                'btn_search': 'Buscar Sinais', 'th_freq': 'Freq', 'th_call': 'Indicativo', 'th_station': 'Entidade / Estação', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Localidade',
                 'msg_loading': 'Inicializando motor de base de dados...',
                 'msg_ready': 'Sistema Pronto. <br> Execute uma varredura para visualizar no mapa.',
                 'msg_error': 'Falha na leitura do banco de dados (ILGADATA.zip não localizado).',
@@ -528,16 +589,16 @@
                 'lbl_lang': 'Idioma da Interface:', 'modal_help_title': 'Manual Rápido de Operação',
                 'help_text': `<p>Instruções para extração de dados utilitários HF:</p>
                               <ul>
-                                <li><b>Varredura Direcionada:</b> Insira a frequência central (kHz). Ajuste a "Tolerância" para compensar desvios ou buscar redes adjacentes.</li>
-                                <li><b>Filtro de Emissão:</b> Isole os resultados selecionando sinais de Voz, Dados (Digitais) ou Código Morse (CW).</li>
-                                <li><b>Geolocalização:</b> Clique sobre qualquer interceptação na tabela para plotar a origem transmissora no mapa via satélite (quando disponível).</li>
+                                <li><b>Varredura Direcionada:</b> Insira a frequência central (kHz). Ajuste a "Tolerância" para compensar desvios.</li>
+                                <li><b>Aba Tabela Completa:</b> Exibe todo o arquivo ILG de uma vez para leitura livre.</li>
+                                <li><b>Geolocalização:</b> Clique sobre qualquer interceptação na tabela para plotar a origem transmissora no mapa.</li>
                               </ul>`
             },
             'en': {
                 'app_title': 'Signal Intelligence System', 'btn_options': 'Settings', 'btn_help': 'Help',
                 'lbl_freq': 'Freq (kHz)', 'lbl_range': 'Tolerance', 'lbl_mod': 'Modulation', 'lbl_prot': 'Protocol Filter',
                 'opt_exact': 'Exact', 'opt_any': 'Any', 'opt_all': 'All', 'opt_all_prot': 'All',
-                'btn_search': 'Scan Signals', 'th_freq': 'Freq', 'th_station': 'Entity / Station', 'th_mod': 'Mod.', 'th_prot': 'Protocol', 'th_loc': 'Location',
+                'btn_search': 'Scan Signals', 'th_freq': 'Freq', 'th_call': 'Callsign', 'th_station': 'Entity / Station', 'th_mod': 'Mod.', 'th_prot': 'Protocol', 'th_loc': 'Location',
                 'msg_loading': 'Initializing database engine...',
                 'msg_ready': 'System Ready. <br> Run a scan to visualize on the map.',
                 'msg_error': 'Database read failure (ILGADATA.zip not found).',
@@ -546,16 +607,16 @@
                 'lbl_lang': 'Interface Language:', 'modal_help_title': 'Quick Operation Manual',
                 'help_text': `<p>Instructions for HF utility data extraction:</p>
                               <ul>
-                                <li><b>Targeted Scan:</b> Enter the center frequency (kHz). Adjust "Tolerance" to compensate for drift or search adjacent nets.</li>
-                                <li><b>Emission Filter:</b> Isolate results by selecting Voice, Data (Digital), or Morse Code (CW) signals.</li>
-                                <li><b>Geolocation:</b> Click any interception in the table to plot the transmitting origin on the satellite map (when available).</li>
+                                <li><b>Targeted Scan:</b> Enter the center frequency (kHz). Adjust "Tolerance" to compensate for drift.</li>
+                                <li><b>Full Table Tab:</b> Shows the entire ILG file at once for free reading.</li>
+                                <li><b>Geolocation:</b> Click any interception in the table to plot the transmitting origin on the map.</li>
                               </ul>`
             },
             'es': {
                 'app_title': 'Signal Intelligence System', 'btn_options': 'Configuración', 'btn_help': 'Ayuda',
                 'lbl_freq': 'Frec (kHz)', 'lbl_range': 'Tolerancia', 'lbl_mod': 'Modulación', 'lbl_prot': 'Filtro Protocolo',
                 'opt_exact': 'Exacta', 'opt_any': 'Cualquiera', 'opt_all': 'Todas', 'opt_all_prot': 'Todos',
-                'btn_search': 'Buscar Señales', 'th_freq': 'Frec', 'th_station': 'Entidad / Estación', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Ubicación',
+                'btn_search': 'Buscar Señales', 'th_freq': 'Frec', 'th_call': 'Indicativo', 'th_station': 'Entidad / Estación', 'th_mod': 'Mod.', 'th_prot': 'Protocolo', 'th_loc': 'Ubicación',
                 'msg_loading': 'Inicializando motor de base de datos...',
                 'msg_ready': 'Sistema Listo. <br> Ejecute una búsqueda para visualizar en el mapa.',
                 'msg_error': 'Fallo en lectura de base de datos (ILGADATA.zip no encontrado).',
@@ -564,9 +625,9 @@
                 'lbl_lang': 'Idioma de Interfaz:', 'modal_help_title': 'Manual Rápido de Operación',
                 'help_text': `<p>Instrucciones para extracción de datos utilitarios HF:</p>
                               <ul>
-                                <li><b>Búsqueda Dirigida:</b> Ingrese la frecuencia central (kHz). Ajuste la "Tolerancia" para compensar desvíos o buscar redes adyacentes.</li>
-                                <li><b>Filtro de Emisión:</b> Aísle los resultados seleccionando señales de Voz, Datos (Digitales) o Código Morse (CW).</li>
-                                <li><b>Geolocalización:</b> Haga clic en cualquier interceptación de la tabla para trazar el origen en el mapa satelital (cuando esté disponible).</li>
+                                <li><b>Búsqueda Dirigida:</b> Ingrese la frecuencia central (kHz). Ajuste la "Tolerancia" para compensar desvíos.</li>
+                                <li><b>Pestaña Tabla Completa:</b> Muestra todo el archivo ILG a la vez para lectura libre.</li>
+                                <li><b>Geolocalización:</b> Haga clic en cualquier interceptación de la tabla para trazar el origen en el mapa.</li>
                               </ul>`
             }
         };
@@ -600,6 +661,32 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function closeModalOutside(event, id) { if (event.target.id === id) closeModal(id); }
 
+        // --- Controle das Abas ---
+        function switchTab(tab) {
+            currentTab = tab;
+            if(tab === 'ilg') {
+                document.getElementById('toolbar-ilg').style.display = 'flex';
+                document.getElementById('resultBody').style.display = 'table-row-group';
+                document.getElementById('allBody').style.display = 'none';
+                
+                document.getElementById('tab-btn-ilg').classList.add('active');
+                document.getElementById('tab-btn-all').classList.remove('active');
+            } else {
+                document.getElementById('toolbar-ilg').style.display = 'none';
+                document.getElementById('resultBody').style.display = 'none';
+                document.getElementById('allBody').style.display = 'table-row-group';
+                
+                document.getElementById('tab-btn-ilg').classList.remove('active');
+                document.getElementById('tab-btn-all').classList.add('active');
+                
+                // Renderiza a tabela inteira apenas se ainda não foi renderizada
+                if(ilgData.length > 0 && document.getElementById('allBody').children.length === 0) {
+                    renderizarTabelaCompleta();
+                }
+            }
+            if(map) { setTimeout(() => map.invalidateSize(), 100); }
+        }
+
         changeLanguage('pt');
 
         // Carregamento do BD (JSZip)
@@ -614,6 +701,9 @@
                 ilgData = text.split('\n');
                 const statusDiv = document.getElementById('status-msg');
                 statusDiv.innerHTML = '<span class="status-icon">✅</span><br>' + translations[currentLang]['msg_ready'];
+                
+                // Se a aba 'Tabela Completa' já estiver selecionada quando terminar de baixar
+                if(currentTab === 'all') renderizarTabelaCompleta();
             })
             .catch(err => {
                 const statusDiv = document.getElementById('status-msg');
@@ -630,6 +720,56 @@
             }).addTo(map);
         }
 
+        // --- Renderização da Aba Tabela Completa (ILGDATA Puro) ---
+        function renderizarTabelaCompleta() {
+            const tbody = document.getElementById('allBody');
+            const fragment = document.createDocumentFragment();
+
+            const regexFreq = /^\s*(\d{1,5}\.\d{2})/;
+            const regexMode = /(AM|USB[A-Z0-9]*|LSB[A-Z0-9]*|ISB|CW|FM|FSK|DRM|DATA(?::[A-Z]+(?:\s+[A-Z]+)*)?)/i;
+            const regexProt = /((?:STANAG|PACTOR|ALE|MIL-STD|SITOR|NAVTEX|GMDSS|LINK|MFSK|FSK|PSK|RTTY|FAX|WEFAX|DGPS|MPSK|NT-\d+|AT-\d+|HFDL|SELCAL|BAUDOT|DSC|SYNOP|ARQ|FEC).*?)(?=\s{2,}|$)/i;
+            const regexCoords = /(-?\d{1,2}\.\d{4,}),\s*(-?\d{1,3}\.\d{4,})/;
+
+            ilgData.forEach(line => {
+                const fMatch = line.match(regexFreq);
+                if(!fMatch) return;
+                
+                const freq = parseFloat(fMatch[1]);
+                const station = line.substring(8, 38).trim();
+                if(station.includes("STATION") || station.includes("######")) return;
+
+                let callsign = "";
+                if(line.length > 52) callsign = line.substring(42, 52).trim();
+
+                const mMatch = line.match(regexMode);
+                const modeRaw = mMatch ? mMatch[1].trim().toUpperCase() : "";
+
+                const pMatch = line.match(regexProt);
+                const protRaw = pMatch ? pMatch[1].trim() : "";
+
+                const cMatch = line.match(regexCoords);
+                const lat = cMatch ? parseFloat(cMatch[1]) : null;
+                const lon = cMatch ? parseFloat(cMatch[2]) : null;
+                const location = line.substring(130, 156).trim();
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${freq.toFixed(2)}</td>
+                    <td style="font-weight:600;">${callsign}</td>
+                    <td>${station}</td>
+                    <td>${modeRaw}</td>
+                    <td>${protRaw}</td>
+                    <td>${location}</td>
+                `;
+                tr.onclick = () => mostrarMapa(lat, lon, station, freq);
+                fragment.appendChild(tr);
+            });
+            
+            // Adiciona todos os elementos de uma vez para não travar a tela
+            tbody.appendChild(fragment);
+        }
+
+        // --- Renderização da Aba Buscador ILG ---
         function buscarSinais() {
             if (ilgData.length === 0) return;
 
@@ -662,6 +802,10 @@
                 const station = line.substring(8, 38).trim();
                 if(station.includes("STATION") || station.includes("######")) return;
 
+                // Extração do Indicativo na posição padrão do ILG
+                let callsign = "";
+                if(line.length > 52) callsign = line.substring(42, 52).trim();
+
                 const mMatch = line.match(regexMode);
                 const modeRaw = mMatch ? mMatch[1].trim().toUpperCase() : "";
 
@@ -685,6 +829,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${freq.toFixed(2)}</td>
+                    <td style="font-weight:600;">${callsign}</td>
                     <td>${station}</td>
                     <td>${modeRaw}</td>
                     <td>${protRaw}</td>
