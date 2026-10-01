@@ -1,0 +1,36 @@
+name: Atualizar Radar HF CPDLC
+
+on:
+  schedule:
+    # Aciona a cada 5 minutos (limite mínimo do GitHub Actions)
+    - cron: '*/5 * * * *'
+  workflow_dispatch: 
+    # Permite rodar manualmente clicando em um botão
+
+jobs:
+  atualizar-dados:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Baixar arquivos do repositório
+      uses: actions/checkout@v3
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Instalar Bibliotecas
+      run: |
+        pip install selenium webdriver-manager
+
+    - name: Rodar o Motor de Varredura
+      run: python gerar_dados_radar.py
+
+    - name: Salvar novo JSON no site
+      run: |
+        git config --global user.name "Radar Bot PP2LA"
+        git config --global user.email "actions@github.com"
+        git add dados_radar.json
+        git commit -m "Atualização automática do Radar HF CPDLC" || exit 0
+        git push
