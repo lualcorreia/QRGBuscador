@@ -4,6 +4,7 @@ import re
 import os
 from datetime import datetime
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 
 def converter_tempo(texto):
@@ -32,22 +33,22 @@ def atualizar_banco_dados():
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando extração no Airframes.io...")
     
     opcoes = Options()
+    opcoes.binary_location = '/usr/bin/chromium-browser' # FORÇA O NAVEGADOR DO LINUX
     opcoes.add_argument("--headless=new")
     opcoes.add_argument("--no-sandbox")
     opcoes.add_argument("--disable-dev-shm-usage")
     opcoes.add_argument("--window-size=1920,10000")
     
-    # --- SISTEMA DE CAMUFLAGEM (STEALTH) ---
     opcoes.add_argument("--disable-blink-features=AutomationControlled")
     opcoes.add_experimental_option("excludeSwitches", ["enable-automation"])
     opcoes.add_experimental_option('useAutomationExtension', False)
     opcoes.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
     try:
-        # Removido o webdriver-manager. O Selenium agora usa o Chrome nativo do GitHub!
-        driver = webdriver.Chrome(options=opcoes)
+        # FORÇA O DRIVER DO LINUX EM VEZ DE BAIXAR DA INTERNET
+        servico = Service('/usr/bin/chromedriver')
+        driver = webdriver.Chrome(service=servico, options=opcoes)
         
-        # Esconde a bandeira de "WebDriver" do navegador
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
         driver.get("https://tbg.airframes.io/dashboard/hfCPDLC")
@@ -55,7 +56,7 @@ def atualizar_banco_dados():
         time.sleep(35)
         
         texto = driver.execute_script("return document.body.innerText;")
-        print(f"-> Leitura concluída. Foram capturados {len(texto)} caracteres de texto da página.")
+        print(f"-> Leitura concluída. Capturados {len(texto)} caracteres.")
         driver.quit()
     except Exception as e:
         print(f"[ERRO] Falha crítica no WebDriver: {e}")
@@ -76,8 +77,7 @@ def atualizar_banco_dados():
                     dados[icao] = {'freqs': freqs_str, 'hora': traduzir_tempo(p[1].strip()), 'idade_segundos': idade}
 
     if len(dados) == 0:
-        print("\n[ALERTA] Nenhuma FIR foi decifrada! O site pode estar vazio ou a bloquear o robô.")
-        print(f"O que o robô leu na tela:\n{texto[:300]}")
+        print("\n[ALERTA] O site pode estar vazio ou a bloquear o robô.")
     else:
         caminho_arquivo = os.path.join(os.environ.get('GITHUB_WORKSPACE', '.'), 'dados_radar.json')
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
