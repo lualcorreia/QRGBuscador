@@ -153,6 +153,22 @@
         .modal-body ul { padding-left: 18px; margin-top: 10px; }
         .modal-body li { margin-bottom: 6px; }
 
+        /* ======== NOVO: CSS ESPECÍFICO DO RADAR (Sem afetar o resto) ======== */
+        .radar-box {
+            background-color: rgba(26, 32, 44, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            padding: 5px;
+            font-family: var(--font-family);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            white-space: nowrap;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+        .radar-icao { color: #E2E8F0; font-size: 12px; letter-spacing: 0.5px; font-weight: bold; }
+        .radar-freq { color: #4FD1C5; font-size: 11px; font-weight: bold; display: block; margin: 2px 0; }
+        .radar-time { font-size: 9px; color: #718096; }
+
         @media (max-width: 768px) {
             body { height: auto; overflow-y: auto; }
             .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 12px; }
@@ -177,6 +193,8 @@
         
         <div class="nav-tabs">
             <button id="tab-btn-ilg" class="tab-btn active" onclick="switchTab('ilg')">🔍 Buscador</button>
+            <!-- NOVO: BOTAO DO RADAR -->
+            <button id="tab-btn-radar" class="tab-btn" onclick="switchTab('radar')">📡 Radar HF CPDLC</button>
             <button id="tab-btn-all" class="tab-btn" onclick="switchTab('all')">📋 Tabela Completa</button>
         </div>
 
@@ -188,6 +206,7 @@
 
     <main class="app-layout">
         
+        <!-- TOOLBAR ORIGINAL -->
         <div class="toolbar" id="toolbar-ilg">
             <div class="input-group">
                 <label data-i18n="lbl_freq">Freq (kHz)</label>
@@ -230,7 +249,8 @@
             <button class="btn-primary" onclick="buscarSinais()" data-i18n="btn_search">Buscar Sinais</button>
         </div>
 
-        <div class="data-workspace">
+        <!-- WORKSPACE ORIGINAL ILG (Adicionado ID "workspace-ilg" para ocultar facilmente) -->
+        <div class="data-workspace" id="workspace-ilg">
             
             <div class="panel">
                 <div class="table-wrapper">
@@ -265,6 +285,18 @@
             </div>
 
         </div>
+
+        <!-- NOVO: WORKSPACE DO RADAR HF (Oculto por Padrão) -->
+        <div class="data-workspace" id="workspace-radar" style="display: none; flex-direction: column; width: 100%; height: 100%;">
+            <div class="toolbar" style="justify-content: space-between; align-items: center; border-radius: 6px; padding: 12px 16px; flex-shrink: 0;">
+                <div style="font-weight: bold; font-size: 14px; color: var(--primary);">Mapa de Tráfego Oceânico Ativo</div>
+                <div style="font-size: 12px; color: var(--text-muted);" id="radar-status">Aguardando dados...</div>
+            </div>
+            <div class="panel" style="flex: 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border);">
+                <div id="radarMap" style="width: 100%; height: 100%;"></div>
+            </div>
+        </div>
+
     </main>
 
     <div id="optionsModal" class="modal-backdrop" onclick="closeModalOutside(event, 'optionsModal')">
@@ -394,28 +426,50 @@
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function closeModalOutside(event, id) { if (event.target.id === id) closeModal(id); }
 
+        // ======== FUNÇÃO DE ABAS ATUALIZADA (Integra ILG Original e Radar Novo) ========
         function switchTab(tab) {
             currentTab = tab;
-            if(tab === 'ilg') {
-                document.getElementById('toolbar-ilg').style.display = 'flex';
-                document.getElementById('resultBody').style.display = 'table-row-group';
-                document.getElementById('allBody').style.display = 'none';
+            
+            // Oculta tudo
+            document.getElementById('workspace-ilg').style.display = 'none';
+            document.getElementById('workspace-radar').style.display = 'none';
+            
+            document.getElementById('tab-btn-ilg').classList.remove('active');
+            document.getElementById('tab-btn-all').classList.remove('active');
+            document.getElementById('tab-btn-radar').classList.remove('active');
+
+            if(tab === 'ilg' || tab === 'all') {
+                document.getElementById('workspace-ilg').style.display = 'flex';
                 
-                document.getElementById('tab-btn-ilg').classList.add('active');
-                document.getElementById('tab-btn-all').classList.remove('active');
-            } else {
-                document.getElementById('toolbar-ilg').style.display = 'none';
-                document.getElementById('resultBody').style.display = 'none';
-                document.getElementById('allBody').style.display = 'table-row-group';
+                if(tab === 'ilg') {
+                    document.getElementById('toolbar-ilg').style.display = 'flex';
+                    document.getElementById('resultBody').style.display = 'table-row-group';
+                    document.getElementById('allBody').style.display = 'none';
+                    document.getElementById('tab-btn-ilg').classList.add('active');
+                } else {
+                    document.getElementById('toolbar-ilg').style.display = 'none';
+                    document.getElementById('resultBody').style.display = 'none';
+                    document.getElementById('allBody').style.display = 'table-row-group';
+                    document.getElementById('tab-btn-all').classList.add('active');
+                    
+                    if(ilgData.length > 0 && document.getElementById('allBody').children.length === 0) {
+                        renderizarTabelaCompleta();
+                    }
+                }
+                if(map) { setTimeout(() => map.invalidateSize(), 100); }
                 
-                document.getElementById('tab-btn-ilg').classList.remove('active');
-                document.getElementById('tab-btn-all').classList.add('active');
+            } else if (tab === 'radar') {
+                document.getElementById('workspace-radar').style.display = 'flex';
+                document.getElementById('tab-btn-radar').classList.add('active');
                 
-                if(ilgData.length > 0 && document.getElementById('allBody').children.length === 0) {
-                    renderizarTabelaCompleta();
+                if (!radarInit) { 
+                    initRadar(); 
+                    radarInit = true; 
+                } else { 
+                    setTimeout(() => radarMap.invalidateSize(), 100); 
+                    carregarDadosRadar(); 
                 }
             }
-            if(map) { setTimeout(() => map.invalidateSize(), 100); }
         }
 
         changeLanguage('pt');
@@ -585,6 +639,89 @@
                 msgDiv.style.display = 'flex';
                 msgDiv.innerHTML = `<span class="status-icon">📍</span><b>${translations[currentLang]['msg_no_coord']}</b><br><span style="color: var(--danger);">'${station}'</span>`;
             }
+        }
+
+        // ======== NOVO: LÓGICA DO MAPA RADAR ========
+        let radarInit = false;
+        let radarMap = null;
+        let radarLayerGroup = L.layerGroup();
+        let radarFetchInterval = null;
+
+        const COORDENADAS_FALLBACK = {
+            "YMMM": [-40.0, 135.0], "YBBB": [-20.0, 160.0], "GDXB": [24.0, 60.0],
+            "PAZN": [50.0, -150.0], "FNLU": [-10.0, 10.0],  "DIAP": [0.0, -5.0],
+            "KZWY": [38.0, -60.0],  "FSIA": [-5.0, 60.0],   "VCCC": [5.0, 80.0],
+            "EGGX": [54.0, -25.0],  "CZQX": [50.0, -40.0]
+        };
+
+        function initRadar() {
+            radarMap = L.map('radarMap').setView([0, 0], 2);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri', maxZoom: 10
+            }).addTo(radarMap);
+            radarLayerGroup.addTo(radarMap);
+            carregarDadosRadar();
+            radarFetchInterval = setInterval(carregarDadosRadar, 60000); // 60s
+        }
+
+        async function carregarDadosRadar() {
+            try {
+                document.getElementById('radar-status').innerText = "Sincronizando com servidor...";
+                
+                const [geoRes, dataRes] = await Promise.all([
+                    fetch('https://raw.githubusercontent.com/vatsimnetwork/vatspy-data-project/master/Boundaries.geojson'),
+                    fetch('dados_radar.json?t=' + new Date().getTime()) // T timestamp para não bugar cache no Github Pages
+                ]);
+                
+                const geoJson = await geoRes.json();
+                const hfData = dataRes.ok ? await dataRes.json() : {};
+                
+                radarLayerGroup.clearLayers();
+                let firsNoMapa = new Set();
+
+                L.geoJSON(geoJson, {
+                    filter: feature => feature.properties.id || feature.id,
+                    style: feature => {
+                        let icao = feature.properties.id || feature.id;
+                        if (hfData[icao]) return {fillColor: '#3182CE', color: '#4FD1C5', weight: 1.2, fillOpacity: 0.15};
+                        return {fillColor: 'transparent', color: '#2D3748', weight: 0.6, fillOpacity: 0};
+                    },
+                    onEachFeature: (feature, layer) => {
+                        let icao = feature.properties.id || feature.id;
+                        if (hfData[icao]) {
+                            firsNoMapa.add(icao);
+                            let bounds = layer.getBounds();
+                            let center = bounds.getCenter();
+                            criarCaixaRadar(center.lat, center.lng, icao, hfData[icao]);
+                        }
+                    }
+                }).addTo(radarLayerGroup);
+
+                for (let icao in hfData) {
+                    if (!firsNoMapa.has(icao) && COORDENADAS_FALLBACK[icao]) {
+                        criarCaixaRadar(COORDENADAS_FALLBACK[icao][0], COORDENADAS_FALLBACK[icao][1], icao, hfData[icao]);
+                    }
+                }
+                
+                const dataHora = new Date().toLocaleTimeString();
+                document.getElementById('radar-status').innerText = `Última sincronização: ${dataHora}`;
+            } catch (error) {
+                console.error("Erro no radar:", error);
+                document.getElementById('radar-status').innerText = "Aguardando geração do arquivo 'dados_radar.json' pelo backend Python.";
+            }
+        }
+
+        function criarCaixaRadar(lat, lng, icao, info) {
+            let corFreq = info.freqs.includes("kHz") ? "#4FD1C5" : "#A0AEC0";
+            let html = `
+                <div class="radar-box">
+                    <span class="radar-icao">${icao}</span><br>
+                    <span class="radar-freq" style="color:${corFreq}">${info.freqs}</span>
+                    <span class="radar-time">Atualizado: ${info.hora}</span>
+                </div>
+            `;
+            let icon = L.divIcon({ className: 'custom-div-icon', html: html, iconSize: [140, 55], iconAnchor: [70, 27] });
+            L.marker([lat, lng], {icon: icon}).addTo(radarLayerGroup);
         }
     </script>
 </body>
