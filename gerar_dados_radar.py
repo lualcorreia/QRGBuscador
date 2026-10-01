@@ -35,7 +35,8 @@ def atualizar_banco_dados():
     opcoes = Options()
     opcoes.add_argument("--headless")
     opcoes.add_argument("--disable-gpu")
-    opcoes.add_argument("--log-level=3")
+    opcoes.add_argument("--no-sandbox")
+    opcoes.add_argument("--disable-dev-shm-usage")
     opcoes.add_argument("--window-size=1920,10000") 
     
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opcoes)
@@ -60,17 +61,10 @@ def atualizar_banco_dados():
                 if icao not in dados or idade < dados[icao]['idade_segundos']:
                     dados[icao] = {'freqs': freqs_str, 'hora': traduzir_tempo(p[1].strip()), 'idade_segundos': idade}
 
-    # Salva o arquivo JSON na mesma pasta em que o Python for rodado
     with open('dados_radar.json', 'w', encoding='utf-8') as f:
         json.dump(dados, f, ensure_ascii=False, indent=2)
         
     print(f"-> Sucesso. Arquivo 'dados_radar.json' gerado com {len(dados)} FIRs.")
 
 if __name__ == "__main__":
-    while True:
-        try:
-            atualizar_banco_dados()
-        except Exception as e:
-            print("Erro:", e)
-        print("Aguardando 2 minutos...")
-        time.sleep(120)
+    atualizar_banco_dados()
