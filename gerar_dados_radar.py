@@ -4,9 +4,7 @@ import re
 import os
 from datetime import datetime
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 
 def converter_tempo(texto):
     texto = texto.lower()
@@ -46,7 +44,9 @@ def atualizar_banco_dados():
     opcoes.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
     try:
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opcoes)
+        # Removido o webdriver-manager. O Selenium agora usa o Chrome nativo do GitHub!
+        driver = webdriver.Chrome(options=opcoes)
+        
         # Esconde a bandeira de "WebDriver" do navegador
         driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
@@ -75,10 +75,9 @@ def atualizar_banco_dados():
                 if icao not in dados or idade < dados[icao]['idade_segundos']:
                     dados[icao] = {'freqs': freqs_str, 'hora': traduzir_tempo(p[1].strip()), 'idade_segundos': idade}
 
-    # DEBUG: Se falhar a extração, mostra o que o robô realmente leu
     if len(dados) == 0:
-        print("\n[ALERTA] Nenhuma FIR foi decifrada! O site pode estar vazio, a bloquear o robô, ou a carregar lentamente.")
-        print(f"O que o robô leu na tela (primeiros 300 caracteres):\n{texto[:300]}")
+        print("\n[ALERTA] Nenhuma FIR foi decifrada! O site pode estar vazio ou a bloquear o robô.")
+        print(f"O que o robô leu na tela:\n{texto[:300]}")
     else:
         caminho_arquivo = os.path.join(os.environ.get('GITHUB_WORKSPACE', '.'), 'dados_radar.json')
         with open(caminho_arquivo, 'w', encoding='utf-8') as f:
