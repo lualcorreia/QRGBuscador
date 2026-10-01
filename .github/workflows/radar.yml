@@ -21,7 +21,12 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Instalar Dependências
+      - name: Instalar Navegador Nativo do Linux (Chromium)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+
+      - name: Instalar Dependências Python
         run: pip install -r requirements.txt
 
       - name: Executar Extração (Selenium)
@@ -31,6 +36,7 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
+          touch dados_radar.json
           git add dados_radar.json
           git commit -m "Automated update: HF Radar Data [skip ci]" || echo "Nenhuma alteração nos dados."
-          git push
+          git push || echo "Falha ao fazer push."
