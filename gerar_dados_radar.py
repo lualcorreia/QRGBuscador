@@ -1,6 +1,7 @@
 import json
 import time
 import re
+import os
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -33,19 +34,23 @@ def atualizar_banco_dados():
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando extração Airframes.io...")
     
     opcoes = Options()
-    opcoes.add_argument("--headless")
-    opcoes.add_argument("--disable-gpu")
+    opcoes.add_argument("--headless=new")
     opcoes.add_argument("--no-sandbox")
     opcoes.add_argument("--disable-dev-shm-usage")
-    opcoes.add_argument("--window-size=1920,10000") 
+    opcoes.add_argument("--window-size=1920,10000")
+    opcoes.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
     
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opcoes)
-    driver.get("https://tbg.airframes.io/dashboard/hfCPDLC")
-    driver.execute_script("document.body.style.zoom='20%'")
-    time.sleep(20)
-    
-    texto = driver.execute_script("return document.body.innerText;")
-    driver.quit()
+    try:
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=opcoes)
+        driver.get("https://tbg.airframes.io/dashboard/hfCPDLC")
+        print("Aguardando carregamento da página (25s)...")
+        time.sleep(25)
+        
+        texto = driver.execute_script("return document.body.innerText;")
+        driver.quit()
+    except Exception as e:
+        print(f"Erro no WebDriver: {e}")
+        return
 
     dados = {}
     for linha in texto.split('\n'):
@@ -61,10 +66,11 @@ def atualizar_banco_dados():
                 if icao not in dados or idade < dados[icao]['idade_segundos']:
                     dados[icao] = {'freqs': freqs_str, 'hora': traduzir_tempo(p[1].strip()), 'idade_segundos': idade}
 
-    with open('dados_radar.json', 'w', encoding='utf-8') as f:
+    caminho_arquivo = os.path.join(os.environ.get('GITHUB_WORKSPACE', '.'), 'dados_radar.json')
+    with open(caminho_arquivo, 'w', encoding='utf-8') as f:
         json.dump(dados, f, ensure_ascii=False, indent=2)
         
-    print(f"-> Sucesso. Arquivo 'dados_radar.json' gerado com {len(dados)} FIRs.")
+    print(f"-> Sucesso. Arquivo 'dados_radar.json' gerado com {len(dados)} FIRs ativas.")
 
 if __name__ == "__main__":
     atualizar_banco_dados()
