@@ -1,43 +1,43 @@
 {
   "NFFF": {
     "freqs": "8867 kHz",
-    "hora": "16 minutos atrás",
-    "idade_segundos": 960
+    "hora": "18 minutos atrás",
+    "idade_segundos": 1080
   },
   "NZZO": {
-    "freqs": "17904 kHz",
-    "hora": "2 minutos atrás",
-    "idade_segundos": 120
+    "freqs": "5643 | 8867 kHz",
+    "hora": "42 minutos atrás",
+    "idade_segundos": 2520
   },
   "YMMM": {
     "freqs": "13306 | 5634 kHz",
-    "hora": "6 horas atrás",
-    "idade_segundos": 21600
+    "hora": "9 horas atrás",
+    "idade_segundos": 32400
   },
   "AYPM": {
     "freqs": "8861 kHz",
-    "hora": "11 horas atrás",
-    "idade_segundos": 39600
+    "hora": "13 horas atrás",
+    "idade_segundos": 46800
   },
   "NTTT": {
-    "freqs": "5643 kHz",
-    "hora": "11 horas atrás",
-    "idade_segundos": 39600
+    "freqs": "5643 | 8867 kHz",
+    "hora": "13 horas atrás",
+    "idade_segundos": 46800
   },
   "YBBB": {
-    "freqs": "5634 | 13306 kHz",
-    "hora": "25 minutos atrás",
-    "idade_segundos": 1500
+    "freqs": "13261 kHz",
+    "hora": "11 minutos atrás",
+    "idade_segundos": 660
   },
   "CZEG": {
     "freqs": "8891 kHz",
-    "hora": "8 minutos atrás",
-    "idade_segundos": 480
+    "hora": "2 horas atrás",
+    "idade_segundos": 7200
   },
   "MMZT": {
     "freqs": "8843 kHz",
-    "hora": "8 horas atrás",
-    "idade_segundos": 28800
+    "hora": "11 horas atrás",
+    "idade_segundos": 39600
   },
   "GDXB": {
     "freqs": "11390 kHz",
@@ -46,73 +46,73 @@
   },
   "PAZN": {
     "freqs": "17946 kHz",
-    "hora": "3 horas atrás",
-    "idade_segundos": 10800
+    "hora": "6 horas atrás",
+    "idade_segundos": 21600
+  },
+  "RJJJ": {
+    "freqs": "11330 kHz",
+    "hora": "4 minutos atrás",
+    "idade_segundos": 240
   },
   "KZAK": {
     "freqs": "17946 kHz",
-    "hora": "20 minutos atrás",
-    "idade_segundos": 1200
-  },
-  "RJJJ": {
-    "freqs": "8951 kHz",
-    "hora": "an hora atrás",
-    "idade_segundos": 999999999
+    "hora": "2 minutos atrás",
+    "idade_segundos": 120
   },
   "RPHI": {
     "freqs": "8942 | 5655 kHz",
-    "hora": "2 horas atrás",
-    "idade_segundos": 7200
+    "hora": "30 minutos atrás",
+    "idade_segundos": 1800
   },
   "HCSM": {
     "freqs": "11300 kHz",
-    "hora": "an hora atrás",
-    "idade_segundos": 999999999
+    "hora": "4 horas atrás",
+    "idade_segundos": 14400
   },
   "GVSC": {
     "freqs": "8861 | 6535 kHz",
-    "hora": "44 minutos atrás",
-    "idade_segundos": 2640
+    "hora": "9 minutos atrás",
+    "idade_segundos": 540
   },
   "GCCC": {
     "freqs": "8861 | 6535 kHz",
-    "hora": "3 horas atrás",
-    "idade_segundos": 10800
+    "hora": "5 minutos atrás",
+    "idade_segundos": 300
   },
   "GOOO": {
-    "freqs": "6628 kHz",
-    "hora": "31 minutos atrás",
-    "idade_segundos": 1860
+    "freqs": "8861 kHz",
+    "hora": "2 minutos atrás",
+    "idade_segundos": 120
   },
   "ZLLL": {
     "freqs": "8888 kHz",
-    "hora": "9 horas atrás",
-    "idade_segundos": 32400
+    "hora": "12 horas atrás",
+    "idade_segundos": 43200
   },
   "DGAC": {
     "freqs": "8903 kHz",
-    "hora": "2 horas atrás",
-    "idade_segundos": 7200
+    "hora": "12 horas atrás",
+    "idade_segundos": 43200
   },
   "DIII": {
     "freqs": "8861 kHz",
-    "hora": "a dia atrás",
-    "idade_segundos": 999999999
+    "hora": "37 minutos atrás",
+    "idade_segundos": 2220
   },
   "FNAN": {
     "freqs": "8888 kHz",
-    "hora": "2 dias atrás",
-    "idade_segundos": 172800
+    "hora": "3 dias atrás",
+    "idade_segundos": 259200
   },
   "FMMM": {
     "freqs": "5634 | 8879 | 1289 kHz",
-    "hora": "13 horas atrás",
-    "idade_segundos": 46800
+    "hora": "16 horas atrás",
+    "idade_segundos": 57600
   },
   "FQBE": {
     "freqs": "8879 | 1273 kHz",
-    "hora": "11 horas atrás",
-    "idade_segundos": 39600
+    "hora": "14 horas atrás",
+    "idade_segundos": 50400
   },
   "DRRR": {
     "freqs": "8903 kHz",
@@ -130,59 +130,59 @@
     "idade_segundos": 1468800
   },
   "SBAO": {
-    "freqs": "6649 | 8861 kHz",
-    "hora": "4 minutos atrás",
-    "idade_segundos": 240
-  },
-  "EGGX": {
-    "freqs": "5649 kHz",
-    "hora": "21 minutos atrás",
-    "idade_segundos": 1260
+    "freqs": "10096 | 6535 kHz",
+    "hora": "7 minutos atrás",
+    "idade_segundos": 420
   },
   "KZWY": {
-    "freqs": "13306 | 8906 kHz",
-    "hora": "10 minutos atrás",
-    "idade_segundos": 600
+    "freqs": "5598 | 3016 kHz",
+    "hora": "a minuto atrás",
+    "idade_segundos": 999999999
   },
   "LPPO": {
-    "freqs": "6628 | 8906 kHz",
-    "hora": "4 minutos atrás",
-    "idade_segundos": 240
+    "freqs": "6628 | 3016 kHz",
+    "hora": "24 minutos atrás",
+    "idade_segundos": 1440
   },
-  "CZQX": {
-    "freqs": "8831 | 11336 kHz",
+  "EGGX": {
+    "freqs": "10021 | 8879 kHz",
     "hora": "9 horas atrás",
     "idade_segundos": 32400
   },
+  "CZQX": {
+    "freqs": "8831 | 11336 kHz",
+    "hora": "11 horas atrás",
+    "idade_segundos": 39600
+  },
   "BIRD": {
     "freqs": "8891 kHz",
-    "hora": "5 horas atrás",
-    "idade_segundos": 18000
+    "hora": "8 horas atrás",
+    "idade_segundos": 28800
   },
   "SOOO": {
     "freqs": "8855 kHz",
+    "hora": "4 horas atrás",
+    "idade_segundos": 14400
+  },
+  "FAJO": {
+    "freqs": "3476 kHz",
     "hora": "2 horas atrás",
     "idade_segundos": 7200
   },
-  "FAJO": {
-    "freqs": "17955 kHz",
-    "hora": "5 horas atrás",
-    "idade_segundos": 18000
-  },
   "TTZP": {
     "freqs": "8906 | 5598 kHz",
-    "hora": "18 horas atrás",
-    "idade_segundos": 64800
+    "hora": "20 horas atrás",
+    "idade_segundos": 72000
   },
   "WIIF": {
     "freqs": "11396 | 1321 kHz",
-    "hora": "an hora atrás",
-    "idade_segundos": 999999999
+    "hora": "3 horas atrás",
+    "idade_segundos": 10800
   },
   "WAAF": {
     "freqs": "8918 | 11309 kHz",
-    "hora": "4 horas atrás",
-    "idade_segundos": 14400
+    "hora": "6 horas atrás",
+    "idade_segundos": 21600
   },
   "VRMF": {
     "freqs": "6544 | 1271 kHz",
@@ -191,12 +191,12 @@
   },
   "FIMM": {
     "freqs": "5634 | 3476 kHz",
-    "hora": "an hora atrás",
-    "idade_segundos": 999999999
+    "hora": "4 horas atrás",
+    "idade_segundos": 14400
   },
   "VABF": {
-    "freqs": "11300 kHz",
-    "hora": "a minuto atrás",
+    "freqs": "8879 kHz",
+    "hora": "an hora atrás",
     "idade_segundos": 999999999
   },
   "WSJC": {
@@ -206,12 +206,12 @@
   },
   "FSIA": {
     "freqs": "11300 | 5634 kHz",
-    "hora": "7 horas atrás",
-    "idade_segundos": 25200
+    "hora": "10 horas atrás",
+    "idade_segundos": 36000
   },
   "VCCC": {
     "freqs": "5670 | 3470 kHz",
-    "hora": "2 horas atrás",
-    "idade_segundos": 7200
+    "hora": "5 horas atrás",
+    "idade_segundos": 18000
   }
 }
